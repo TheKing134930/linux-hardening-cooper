@@ -36,6 +36,14 @@ Requirements:
 - For each, chmod 700; print a short confirmation per directory.
 - Continue on errors; do not abort the loop.
 AI_BLOCK
+find /home -mindepth 1 -maxdepth 1 -type d | while read -r dir; do
+  if chmod 700 "$dir"; then
+    echo "Set permissions 700 on $dir"
+  else
+    echo "Failed to set permissions on $dir"
+  fi
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -53,6 +61,8 @@ Requirements:
 - chmod 0600 /etc/login.defs
 - Print a concise confirmation.
 AI_BLOCK
+chown root:root /etc/login.defs && chmod 0600 /etc/login.defs && echo "/etc/login.defs ownership and permissions set"
+
 }
 
 # -------------------------------------------------------------------
@@ -75,6 +85,20 @@ Requirements:
   - chmod 0640
   - Print a confirmation per file; skip cleanly if missing.
 AI_BLOCK
+files=(
+  /etc/shadow
+  /etc/gshadow
+  /etc/security/opasswd
+)
+
+for file in "${files[@]}"; do
+  if [ -e "$file" ]; then
+    chown root:shadow "$file" && chmod 0640 "$file" && echo "Set owner and permissions on $file"
+  else
+    echo "Skipping missing file: $file"
+  fi
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -97,7 +121,21 @@ Requirements:
   - chmod 0644
   - Print a confirmation per file; skip missing files without error.
 AI_BLOCK
+#!/bin/bash
+
+files=(
+  /etc/shadow
+  /etc/gshadow
+  /etc/security/opasswd
+)
+
+for file in "${files[@]}"; do
+  if [ -e "$file" ]; then
+    chown root:root "$file" && chmod 0644 "$file" && echo "Set owner root:root and permissions 644 on $file"
+  fi
+done
 }
+
 
 # -------------------------------------------------------------------
 # GRUB config: 0600 root:root
@@ -116,6 +154,14 @@ Requirements:
   - Print a confirmation.
 - If missing, print a brief note and continue.
 AI_BLOCK
+file="/boot/grub/grub.cfg"
+
+if [ -e "$file" ]; then
+  chown root:root "$file" && chmod 0600 "$file" && echo "Set owner root:root and permissions 600 on $file"
+else
+  echo "$file not found, skipping"
+fi
+
 }
 
 # -------------------------------------------------------------------
@@ -135,6 +181,12 @@ Requirements:
   - Print a confirmation per file.
 - Continue on errors for individual files.
 AI_BLOCK
+for file in /boot/System.map-*; do
+  if [ -f "$file" ]; then
+    chown root:root "$file" && chmod 0600 "$file" && echo "Set owner root:root and permissions 600 on $file" || echo "Failed on $file"
+  fi
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -154,6 +206,18 @@ Requirements:
   - chmod 0600
   - Print a confirmation per file; skip missing without error.
 AI_BLOCK
+files=(
+  /etc/shadow
+  /etc/gshadow
+  /etc/security/opasswd
+)
+
+for file in "${files[@]}"; do
+  if [ -e "$file" ]; then
+    chmod 0600 "$file" && echo "Set permissions 600 on $file"
+  fi
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -172,6 +236,14 @@ Requirements:
 - For each, strip u+s, g+ws, o+wrx (i.e., ensure tight perms) using chmod.
 - Print a confirmation per file; continue on errors.
 AI_BLOCK
+find /etc/audit/rules.d/ -maxdepth 1 -type f -name '*.rules' | while read -r file; do
+  if chmod u-s,g-ws,o-wrx "$file"; then
+    echo "Permissions tightened on $file"
+  else
+    echo "Failed to set permissions on $file"
+  fi
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -190,6 +262,16 @@ Requirements:
 - For each match, chmod o-w; print a confirmation per file.
 - Continue on errors; avoid descending into other filesystems (-xdev).
 AI_BLOCK
+df --local -P | tail -n +2 | awk '{print $6}' | while read -r mountpoint; do
+  find "$mountpoint" -xdev -type f -perm -o=w 2>/dev/null | while read -r file; do
+    if chmod o-w "$file"; then
+      echo "Removed world-write permission from $file"
+    else
+      echo "Failed to modify $file"
+    fi
+  done
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -209,6 +291,17 @@ Requirements:
 - Write results to $DOCS/unowned_files.txt (overwrite).
 - Print the number of findings and the report path.
 AI_BLOCK
+mkdir -p "$DOCS"
+output="$DOCS/unowned_files.txt"
+> "$output"
+
+df --local -P | tail -n +2 | awk '{print $6}' | while read -r mountpoint; do
+  find "$mountpoint" -xdev \( -nouser -o -nogroup \) 2>/dev/null >> "$output"
+done
+
+count=$(wc -l < "$output")
+echo "$count unowned files found. Report saved to $output"
+
 }
 
 # -------------------------------------------------------------------
@@ -226,6 +319,21 @@ Requirements:
 - For each regular file, chmod 0640.
 - Continue on errors; print a brief summary or per-file confirmations.
 AI_BLOCK
+count=0
+errors=0
+
+find /var/log -type f 2>/dev/null | while read -r file; do
+  if chmod 0640 "$file"; then
+    echo "Set permissions 640 on $file"
+    ((count++))
+  else
+    echo "Failed to set permissions on $file"
+    ((errors++))
+  fi
+done
+
+echo "Processed $count files with $errors errors."
+
 }
 
 # -------------------------------------------------------------------
@@ -244,4 +352,12 @@ Requirements:
   - chmod 1777
   - Print a confirmation per directory.
 AI_BLOCK
+for dir in /tmp /var/tmp; do
+  if chown root:root "$dir" && chmod 1777 "$dir"; then
+    echo "Set ownership root:root and permissions 1777 on $dir"
+  else
+    echo "Failed to set ownership or permissions on $dir"
+  fi
+done
+
 }

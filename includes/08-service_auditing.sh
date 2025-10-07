@@ -42,4 +42,38 @@ Requirements:
 - Use sudo for system-changing commands.
 - Continue on errors for individual packages; do not abort the loop.
 AI_BLOCK
+#!/bin/bash
+
+if [ -z "$UNWANTED" ]; then
+  echo "No unwanted services configured."
+  exit 0
+fi
+
+IFS=' ' read -r -a pkgs <<< "$UNWANTED"
+
+for pkg in "${pkgs[@]}"; do
+  if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+    read -rp "Is the service $pkg a critical service? (Y/n) " ans
+    ans=${ans:-Y}
+    if [[ "$ans" =~ ^[Nn]$ ]]; then
+      echo "Purging $pkg..."
+      if ! sudo apt-get purge -y "$pkg" >/dev/null 2>&1; then
+        echo "Error purging $pkg. Attempting to fix dpkg status..."
+        sudo dpkg --configure -a
+        if sudo apt-get purge -y "$pkg" >/dev/null 2>&1; then
+          echo "Successfully purged $pkg after recovery."
+        else
+          echo "Failed to purge $pkg after recovery attempt."
+        fi
+      else
+        echo "$pkg purged successfully."
+      fi
+    else
+      echo "$pkg kept."
+    fi
+  else
+    echo "$pkg not installed. Skipping..."
+  fi
+done
+
 }
