@@ -37,6 +37,29 @@ Requirements:
   - Otherwise print that the user is authorized.
 - Continue on errors for any single user so the loop completes.
 AI_BLOCK
+
+mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells)
+
+while IFS=: read -r username _ _ _ _ _ shell; do
+    for valid_shell in "${valid_shells[@]}"; do
+        if [[ "$shell" == "$valid_shell" ]]; then
+            echo -n "Is $username an Authorized User? [Y/n] "
+            read -r reply
+            reply=${reply:-Y}
+            if [[ "$reply" == [Nn] ]]; then
+                if userdel -r "$username" 2>/dev/null; then
+                    echo "User $username deleted."
+                else
+                    userdel -f "$username" 2>/dev/null && echo "User $username forcefully deleted."
+                fi
+            else
+                echo "User $username is authorized."
+            fi
+            break
+        fi
+    done
+done < <(getent passwd)
+
 }
 
 # -------------------------------------------------------------------
@@ -59,6 +82,25 @@ Requirements:
   - Otherwise print that the user is authorized.
 - Continue on errors so the loop completes.
 AI_BLOCK
+
+IFS=: read -r _ _ _ users <<< "$(getent group sudo)"
+IFS=, read -ra user_list <<< "$users"
+
+for user in "${user_list[@]}"; do
+    echo -n "Is $user an Authorized Administrator? [Y/n] "
+    read -r reply
+    reply=${reply:-Y}
+    if [[ "$reply" == [Nn] ]]; then
+        if deluser "$user" sudo 2>/dev/null; then
+            echo "User $user removed from sudo group."
+        else
+            echo "Failed to remove user $user from sudo group."
+        fi
+    else
+        echo "User $user is authorized."
+    fi
+done
+
 }
 
 # -------------------------------------------------------------------
