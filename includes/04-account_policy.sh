@@ -54,7 +54,7 @@ Requirements:
 - Create a timestamped backup before editing.
 - If an equal pwquality line already exists, do nothing.
 - Otherwise insert the exact line immediately before the first occurrence of pam_unix.so in that file.
-- Ensure the edit is idempotent (running again won’t duplicate).
+- Ensure the edit is idempotent (running again wonï¿½t duplicate).
 - Print a brief confirmation when the line is in place.
 AI_BLOCK
 }

@@ -121,6 +121,23 @@ Requirements:
 - Continue on errors so one failure does not stop the loop.
 - Print a brief status line per user or a final summary.
 AI_BLOCK
+
+PASSWORD="${TEMP_PASSWORD:-1CyberPatriot!}"
+success=0
+failure=0
+
+while IFS=: read -r user _; do
+    if printf '%s:%s\n' "$user" "$PASSWORD" | chpasswd --crypt-method SHA512 2>/dev/null; then
+        echo "User $user: password set."
+        success=$((success + 1))
+    else
+        echo "User $user: failed to set password."
+        failure=$((failure + 1))
+    fi
+done < <(getent passwd)
+
+echo "Summary: $success succeeded, $failure failed."
+
 }
 
 # -------------------------------------------------------------------
