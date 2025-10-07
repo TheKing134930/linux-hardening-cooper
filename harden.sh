@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+#set -euo pipefail
 
 # --- elevation guard (re-exec with sudo if not root) ---
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
