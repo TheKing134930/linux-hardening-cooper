@@ -1,5 +1,5 @@
 # Document the system before making changes.
-
+invoke_document_system () {
 echo "Running Documenting System..."
 # Placeholder for Documenting System functionality
 
@@ -35,3 +35,4 @@ for pid in $(sudo ss -plnt | grep -oP 'pid=\K\d+' | sort -u); do cmdline=$(tr -d
 
 # Comapare Vanilla Packages to Installed Packages
 for I in $CURDPKG; do if [[ $VANILLA != *"$I"* ]]; then echo $I >> $DOCS/suspackages.txt; fi; done
+}
