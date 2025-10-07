@@ -1,0 +1,278 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\13-application_security.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\13-application_security.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\09-application_updates.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\09-application_updates.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\02-os_updates.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\02-os_updates.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\12-malware.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\12-malware.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\11-unwanted_software.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\11-unwanted_software.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\10-prohibited_files.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\10-prohibited_files.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\config.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:config.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\08-service_auditing.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\08-service_auditing.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\07-uncategorized_os.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\07-uncategorized_os.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\06-defensive_countermeasures.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\06-defensive_countermeasures.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\05-local_policy.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\05-local_policy.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\04-account_policy.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\04-account_policy.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\03-user_auditing.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\03-user_auditing.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\01-document_system.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:includes\\01-document_system.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\harden.sh||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:harden.sh||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": ".gitignore",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\.gitignore",
+              "RelativeDocumentMoniker": ".gitignore",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\.gitignore",
+              "RelativeToolTip": ".gitignore",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-10-06T21:23:19.059Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "13-application_security.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\13-application_security.sh",
+              "RelativeDocumentMoniker": "includes\\13-application_security.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\13-application_security.sh",
+              "RelativeToolTip": "includes\\13-application_security.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T21:17:59.278Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "09-application_updates.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\09-application_updates.sh",
+              "RelativeDocumentMoniker": "includes\\09-application_updates.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\09-application_updates.sh",
+              "RelativeToolTip": "includes\\09-application_updates.sh",
+              "ViewState": "AgIAACIAAAAAAAAAAAAowF0AAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T21:12:51.719Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "12-malware.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\12-malware.sh",
+              "RelativeDocumentMoniker": "includes\\12-malware.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\12-malware.sh",
+              "RelativeToolTip": "includes\\12-malware.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T17:45:13.675Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "11-unwanted_software.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\11-unwanted_software.sh",
+              "RelativeDocumentMoniker": "includes\\11-unwanted_software.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\11-unwanted_software.sh",
+              "RelativeToolTip": "includes\\11-unwanted_software.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T16:06:19.655Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "10-prohibited_files.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\10-prohibited_files.sh",
+              "RelativeDocumentMoniker": "includes\\10-prohibited_files.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\10-prohibited_files.sh",
+              "RelativeToolTip": "includes\\10-prohibited_files.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T16:06:04.438Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "08-service_auditing.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\08-service_auditing.sh",
+              "RelativeDocumentMoniker": "includes\\08-service_auditing.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\08-service_auditing.sh",
+              "RelativeToolTip": "includes\\08-service_auditing.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC0AAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T16:00:53.443Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "07-uncategorized_os.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\07-uncategorized_os.sh",
+              "RelativeDocumentMoniker": "includes\\07-uncategorized_os.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\07-uncategorized_os.sh",
+              "RelativeToolTip": "includes\\07-uncategorized_os.sh",
+              "ViewState": "AgIAAMoAAAAAAAAAAAAcwN0AAAAJAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T15:52:22.054Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "06-defensive_countermeasures.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\06-defensive_countermeasures.sh",
+              "RelativeDocumentMoniker": "includes\\06-defensive_countermeasures.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\06-defensive_countermeasures.sh",
+              "RelativeToolTip": "includes\\06-defensive_countermeasures.sh",
+              "ViewState": "AgIAAC8AAAAAAAAAAAAcwGsAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T15:47:44.602Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "05-local_policy.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\05-local_policy.sh",
+              "RelativeDocumentMoniker": "includes\\05-local_policy.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\05-local_policy.sh",
+              "RelativeToolTip": "includes\\05-local_policy.sh",
+              "ViewState": "AgIAAH0AAAAAAAAAAAAcwLkAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T15:13:13.563Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "04-account_policy.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\04-account_policy.sh",
+              "RelativeDocumentMoniker": "includes\\04-account_policy.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\04-account_policy.sh",
+              "RelativeToolTip": "includes\\04-account_policy.sh",
+              "ViewState": "AgIAAEcAAAAAAAAAAAAcwHoAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T15:13:00.012Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "03-user_auditing.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\03-user_auditing.sh",
+              "RelativeDocumentMoniker": "includes\\03-user_auditing.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\03-user_auditing.sh",
+              "RelativeToolTip": "includes\\03-user_auditing.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJoAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T14:28:37.83Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "02-os_updates.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\02-os_updates.sh",
+              "RelativeDocumentMoniker": "includes\\02-os_updates.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\02-os_updates.sh",
+              "RelativeToolTip": "includes\\02-os_updates.sh",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAAAGIAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T14:28:28.738Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "harden.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\harden.sh",
+              "RelativeDocumentMoniker": "harden.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\harden.sh",
+              "RelativeToolTip": "harden.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T14:27:51.391Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "config.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\config.sh",
+              "RelativeDocumentMoniker": "config.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\config.sh",
+              "RelativeToolTip": "config.sh",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAACYAAAAjAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T14:27:26.613Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "01-document_system.sh",
+              "DocumentMoniker": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\01-document_system.sh",
+              "RelativeDocumentMoniker": "includes\\01-document_system.sh",
+              "ToolTip": "C:\\Users\\NickGaunt\\source\\repos\\mysterg\\LinuxHardening-Starter\\includes\\01-document_system.sh",
+              "RelativeToolTip": "includes\\01-document_system.sh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAsAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|",
+              "WhenOpened": "2025-10-06T14:27:14.755Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
