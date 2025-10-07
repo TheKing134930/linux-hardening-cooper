@@ -34,6 +34,41 @@ Requirements:
 - Preserve other content/spacing as much as reasonable.
 - Print a short confirmation for each directive set.
 AI_BLOCK
+backup="/etc/login.defs.$(date +%Y%m%d%H%M%S).bak"
+cp /etc/login.defs "$backup"
+
+declare -A directives=(
+[UID_MIN]=1000
+[UID_MAX]=60000
+[GID_MIN]=1000
+[GID_MAX]=60000
+)
+
+file="/etc/login.defs"
+tempfile=$(mktemp)
+
+while IFS= read -r line; do
+skip=0
+for key in "${!directives[@]}"; do
+if [[ "$line" =~ ^#?[[:space:]]*${key}[[:space:]]+ ]]; then
+echo "${key} ${directives[$key]}" >> "$tempfile"
+unset directives[$key]
+skip=1
+break
+fi
+done
+[[ $skip -eq 0 ]] && echo "$line" >> "$tempfile"
+done < "$file"
+
+for key in "${!directives[@]}"; do
+echo "${key} ${directives[$key]}" >> "$tempfile"
+done
+
+mv "$tempfile" "$file"
+
+for key in UID_MIN UID_MAX GID_MIN GID_MAX; do
+grep -qE "^[[:space:]]*${key}[[:space:]]+${directives[$key]:-}" "$file" && echo "${key} set to ${directives[$key]:-}" || echo "${key} set"
+done
 }
 
 # -------------------------------------------------------------------
@@ -57,6 +92,19 @@ Requirements:
 - Ensure the edit is idempotent (running again won�t duplicate).
 - Print a brief confirmation when the line is in place.
 AI_BLOCK
+backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
+file="/etc/pam.d/common-password"
+line="password requisite pam_pwquality.so retry=3"
+
+cp "$file" "$backup"
+
+if ! grep -Fxq "$line" "$file"; then
+awk -v insert="$line" '
+{if(!inserted && $0 ~ /pam_unix.so/) {print insert; inserted=1} print}
+' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+fi
+
+grep -Fxq "$line" "$file" && echo "pwquality line is in place."
 }
 
 # -------------------------------------------------------------------
@@ -89,6 +137,40 @@ Requirements:
 - Keep changes idempotent.
 - Print a short confirmation after applying settings.
 AI_BLOCK
+backup="/etc/security/pwquality.conf.$(date +%Y%m%d%H%M%S).bak"
+file="/etc/security/pwquality.conf"
+cp "$file" "$backup"
+
+declare -A keys=(
+[minlen]=12
+[dcredit]=-1
+[ucredit]=-1
+[ocredit]=-1
+[lcredit]=-1
+)
+
+tempfile=$(mktemp)
+
+while IFS= read -r line; do
+modified=0
+for k in "${!keys[@]}"; do
+if [[ "$line" =~ ^[[:space:]]#?[[:space:]]$k[[:space:]]*= ]]; then
+echo "$k = ${keys[$k]}" >> "$tempfile"
+unset keys[$k]
+modified=1
+break
+fi
+done
+[[ $modified -eq 0 ]] && echo "$line" >> "$tempfile"
+done < "$file"
+
+for k in "${!keys[@]}"; do
+echo "$k = ${keys[$k]}" >> "$tempfile"
+done
+
+mv "$tempfile" "$file"
+
+echo "pwquality.conf settings applied."
 }
 
 # -------------------------------------------------------------------
@@ -119,4 +201,61 @@ Requirements:
 - Keep the edit idempotent (no duplicates on subsequent runs).
 - Print simple confirmations indicating which lines were added or already present.
 AI_BLOCK
+backup_auth="/etc/pam.d/common-auth.$(date +%Y%m%d%H%M%S).bak"
+backup_account="/etc/pam.d/common-account.$(date +%Y%m%d%H%M%S).bak"
+
+file_auth="/etc/pam.d/common-auth"
+file_account="/etc/pam.d/common-account"
+
+cp "$file_auth" "$backup_auth"
+cp "$file_account" "$backup_account"
+
+preauth="auth required pam_tally2.so preauth"
+authfail="auth required pam_tally2.so authfail"
+authsucc="auth required pam_tally2.so authsucc"
+account_line="account required pam_tally2.so"
+grep -Fxq "$preauth" "$file_auth" || preauth_added=1
+grep -Fxq "$authfail" "$file_auth" || authfail_added=1
+grep -Fxq "$authsucc" "$file_auth" || authsucc_added=1
+grep -vF "$preauth" "$file_auth" | grep -vF "$authfail" | grep -vF "$authsucc" > "${file_auth}.tmp"
+
+inserted_preauth=0
+inserted_authfail=0
+inserted_authsucc=0
+
+while IFS= read -r line; do
+if [[ $inserted_preauth -eq 0 && "$line" =~ pam_unix.so ]]; then
+echo "$preauth" >> "${file_auth}.tmp"
+inserted_preauth=1
+[[ $preauth_added ]] && echo "Added preauth line."
+echo "$line" >> "${file_auth}.tmp"
+if [[ $authfail_added ]]; then
+echo "$authfail" >> "${file_auth}.tmp"
+inserted_authfail=1
+echo "Added authfail line."
+fi
+else
+echo "$line" >> "${file_auth}.tmp"
+fi
+done < "$file_auth"
+
+[[ $inserted_preauth -eq 0 ]] && { echo "$preauth" >> "${file_auth}.tmp"; [[ $preauth_added ]] && echo "Added preauth line at EOF."; }
+[[ $inserted_authfail -eq 0 && $authfail_added ]] && { echo "$authfail" >> "${file_auth}.tmp"; echo "Added authfail line at EOF."; }
+
+if [[ $authsucc_added ]]; then
+echo "$authsucc" >> "${file_auth}.tmp"
+echo "Added authsucc line."
+fi
+
+mv "${file_auth}.tmp" "$file_auth"
+
+[[ -z $preauth_added ]] && echo "Preauth line already present."
+[[ -z $authfail_added ]] && echo "Authfail line already present."
+[[ -z $authsucc_added ]] && echo "Authsucc line already present."
+if ! grep -Fxq "$account_line" "$file_account"; then
+echo "$account_line" >> "$file_account"
+echo "Added account line."
+else
+echo "Account line already present."
+fi
 }

@@ -35,6 +35,19 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors; do not abort the script if one key fails.
 AI_BLOCK
+declare -A sysctl_keys=(
+[net.ipv4.ip_forward]=1
+[vm.swappiness]=10
+[kernel.pid_max]=65536
+)
+
+for key in "${!sysctl_keys[@]}"; do
+if sysctl -w "$key=${sysctl_keys[$key]}" 2>/dev/null; then
+echo "$key set to ${sysctl_keys[$key]}"
+else
+echo "Failed to set $key"
+fi
+done
 }
 
 # -------------------------------------------------------------------
@@ -55,6 +68,20 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors.
 AI_BLOCK
+declare -A sysctl_keys=(
+[net.ipv4.ip_forward]=1
+[vm.swappiness]=10
+[kernel.pid_max]=65536
+)
+
+for key in "${!sysctl_keys[@]}"; do
+sysctl -w "$key=${sysctl_keys[$key]}" >/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+echo "$key set to ${sysctl_keys[$key]}"
+else
+echo "Failed to set $key"
+fi
+done
 }
 
 # -------------------------------------------------------------------
@@ -78,6 +105,22 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors.
 AI_BLOCK
+sysctl_keys=(
+"net.ipv4.ip_forward=1"
+"vm.swappiness=10"
+"kernel.pid_max=65536"
+)
+
+for entry in "${sysctl_keys[@]}"; do
+if sysctl -w "$entry" >/dev/null 2>&1; then
+key="${entry%%=}"
+value="${entry#=}"
+echo "$key set to $value"
+else
+key="${entry%%=*}"
+echo "Failed to set $key"
+fi
+done
 }
 
 # -------------------------------------------------------------------
@@ -101,6 +144,18 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors.
 AI_BLOCK
+for key in net.ipv4.ip_forward vm.swappiness kernel.pid_max; do
+case "$key" in
+net.ipv4.ip_forward) value=1 ;;
+vm.swappiness) value=10 ;;
+kernel.pid_max) value=65536 ;;
+esac
+if sysctl -w "$key=$value" >/dev/null 2>&1; then
+echo "$key set to $value"
+else
+echo "Failed to set $key"
+fi
+done
 }
 
 # -------------------------------------------------------------------
@@ -122,6 +177,16 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors.
 AI_BLOCK
+for kv in
+"net.ipv4.ip_forward=1"
+"vm.swappiness=10"
+"kernel.pid_max=65536"; do
+if sysctl -w "$kv" >/dev/null 2>&1; then
+echo "${kv%%=} set to ${kv#=}"
+else
+echo "Failed to set ${kv%%=*}"
+fi
+done
 }
 
 # -------------------------------------------------------------------
@@ -143,6 +208,17 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors.
 AI_BLOCK
+for kv in
+"net.ipv4.conf.all.rp_filter=1"
+"net.ipv4.conf.default.rp_filter=1"
+"net.ipv4.icmp_echo_ignore_broadcasts=1"
+"net.ipv4.icmp_ignore_bogus_error_responses=1"; do
+if sysctl -w "$kv" >/dev/null 2>&1; then
+echo "${kv%%=} set to ${kv#=}"
+else
+echo "Failed to set ${kv%%=*}"
+fi
+done
 }
 
 # -------------------------------------------------------------------
@@ -162,6 +238,32 @@ Requirements:
 - Reload settings with sysctl so they take effect without reboot (e.g., sysctl --system).
 - Print a summary of the file written and reload status.
 AI_BLOCK
+outfile="/etc/sysctl.d/99-hardening.conf"
+[[ -f "$outfile" ]] && cp "$outfile" "${outfile}.$(date +%Y%m%d%H%M%S).bak"
+
+declare -A settings=(
+[net.ipv4.ip_forward]=1
+[vm.swappiness]=10
+[kernel.pid_max]=65536
+[net.ipv4.conf.all.rp_filter]=1
+[net.ipv4.conf.default.rp_filter]=1
+[net.ipv4.icmp_echo_ignore_broadcasts]=1
+[net.ipv4.icmp_ignore_bogus_error_responses]=1
+)
+
+tmpfile=$(mktemp)
+for key in "${!settings[@]}"; do
+echo "$key=${settings[$key]}" >> "$tmpfile"
+done
+
+sort -u "$tmpfile" > "$outfile"
+rm -f "$tmpfile"
+
+if sysctl --system >/dev/null 2>&1; then
+echo "Wrote $outfile and applied settings"
+else
+echo "Wrote $outfile but failed to apply settings"
+fi
 }
 
 # -------------------------------------------------------------------
@@ -182,4 +284,9 @@ Requirements:
 - Print confirmation lines for each step.
 - Continue on errors with a warning, but attempt subsequent steps.
 AI_BLOCK
+find /etc/sudoers.d/ -type f -exec rm -f {} ; && echo "Removed files in /etc/sudoers.d" || echo "Warning: Failed to remove some files in /etc/sudoers.d"
+
+DEBIAN_FRONTEND=noninteractive apt-get purge -y sudo && echo "Purged sudo" || echo "Warning: Failed to purge sudo"
+
+DEBIAN_FRONTEND=noninteractive apt-get install -y sudo && echo "Reinstalled sudo" || echo "Warning: Failed to install sudo"
 }

@@ -157,6 +157,17 @@ Requirements:
   - Print a confirmation line.
 - Continue on errors so the loop completes.
 AI_BLOCK
+
+getent passwd | awk -F: '$3 == 0 && $1 != "root" { print $1 }' | while read -r user; do
+    if userdel -r "$user" 2>/dev/null; then
+        echo "User $user deleted."
+    elif userdel -f "$user" 2>/dev/null; then
+        echo "User $user forcefully deleted."
+    else
+        echo "Failed to delete user $user."
+    fi
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -174,6 +185,20 @@ Requirements:
 - For each username, run the chage command with: -M 60 -m 10 -W 7.
 - Continue on errors; print minimal status or a final summary.
 AI_BLOCK
+
+success=0
+failure=0
+
+getent passwd | cut -d: -f1 | while read -r user; do
+    if chage -M 60 -m 10 -W 7 "$user" 2>/dev/null; then
+        success=$((success + 1))
+    else
+        failure=$((failure + 1))
+    fi
+done
+
+echo "Password policy updated: $success succeeded, $failure failed."
+
 }
 
 # -------------------------------------------------------------------
@@ -192,6 +217,15 @@ Requirements:
 - Print "Changed shell for <user> to /bin/bash." for each change.
 - Continue on errors so the loop completes.
 AI_BLOCK
+while IFS=: read -r user _ uid _ _ _ _; do
+if [ "$uid" -eq 0 ] || [ "$uid" -ge 1000 ]; then
+if usermod -s /bin/bash "$user" 2>/dev/null; then
+echo "Changed shell for $user to /bin/bash."
+else
+echo "Failed to change shell for $user."
+fi
+fi
+done < /etc/passwd
 }
 
 # -------------------------------------------------------------------
@@ -210,4 +244,13 @@ Requirements:
 - Print "Changed shell for <user> to /usr/sbin/nologin." for each change.
 - Continue on errors so the loop completes.
 AI_BLOCK
+while IFS=: read -r user _ uid _ _ _ _; do
+if [ "$uid" -ge 1 ] && [ "$uid" -le 999 ]; then
+if usermod -s /usr/sbin/nologin "$user" 2>/dev/null; then
+echo "Changed shell for $user to /usr/sbin/nologin."
+else
+echo "Failed to change shell for $user."
+fi
+fi
+done < /etc/passwd
 }
