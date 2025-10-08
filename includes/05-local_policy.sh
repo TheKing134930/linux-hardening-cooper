@@ -178,15 +178,10 @@ Requirements:
 - Continue on errors.
 AI_BLOCK
 for kv in
-"net.ipv4.ip_forward=1"
-"vm.swappiness=10"
-"kernel.pid_max=65536"; do
-if sysctl -w "$kv" >/dev/null 2>&1; then
-echo "${kv%%=} set to ${kv#=}"
-else
-echo "Failed to set ${kv%%=*}"
-fi
-done
+"net.ipv4.icmp_echo_ignore_broadcasts=1"
+"net.ipv4.icmp_ignore_bogus_error_responses=1"
+"net.ipv4.tcp_syncookies=1"
+"net.ipv4.ip_forward=0"; do if sysctl -w "$kv" >/dev/null 2>&1; then key="${kv%%=}" val="${kv#=}" echo "$key set to $val" else echo "Failed to set ${kv%%=*}" fi done
 }
 
 # -------------------------------------------------------------------
