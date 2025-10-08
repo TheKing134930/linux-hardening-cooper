@@ -203,17 +203,34 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors.
 AI_BLOCK
-for kv in
-"net.ipv4.conf.all.rp_filter=1"
-"net.ipv4.conf.default.rp_filter=1"
-"net.ipv4.icmp_echo_ignore_broadcasts=1"
-"net.ipv4.icmp_ignore_bogus_error_responses=1"; do
-if sysctl -w "$kv" >/dev/null 2>&1; then
-echo "${kv%%=} set to ${kv#=}"
-else
-echo "Failed to set ${kv%%=*}"
+#!/usr/bin/env bash
+set -u
+
+apply_sysctl() {
+local key="$1" desired="$2"
+if ! command -v sysctl >/dev/null 2>&1; then
+echo "[ERR] $key -> sysctl not found"
+return 0
 fi
-done
+
+if sysctl -w "${key}=${desired}" >/dev/null 2>&1; then
+local current
+current="$(sysctl -n "${key}" 2>/dev/null || echo "?")"
+if [[ "${current}" == "${desired}" ]]; then
+echo "[OK] ${key}=${current}"
+else
+echo "[WARN] ${key} applied, readback=${current}, expected=${desired}"
+fi
+else
+echo "[ERR] ${key} -> failed to apply"
+fi
+}
+
+apply_sysctl "fs.protected_hardlinks" "1"
+apply_sysctl "fs.protected_symlinks" "1"
+apply_sysctl "fs.suid_dumpable" "0"
+apply_sysctl "kernel.randomize_va_space" "2"
+
 }
 
 # -------------------------------------------------------------------
