@@ -177,11 +177,10 @@ Requirements:
 - Print a short confirmation per key.
 - Continue on errors.
 AI_BLOCK
-for kv in
-"net.ipv4.icmp_echo_ignore_broadcasts=1"
-"net.ipv4.icmp_ignore_bogus_error_responses=1"
-"net.ipv4.tcp_syncookies=1"
-"net.ipv4.ip_forward=0"; do if sysctl -w "$kv" >/dev/null 2>&1; then key="${kv%%=}" val="${kv#=}" echo "$key set to $val" else echo "Failed to set ${kv%%=*}" fi done
+for key in net.ipv4.icmp_echo_ignore_broadcasts=1 net.ipv4.icmp_ignore_bogus_error_responses=1 net.ipv4.tcp_syncookies=1 net.ipv4.ip_forward=0; do
+  sudo sysctl -w "$key" && echo "Set $key" || echo "Failed to set $key"
+done
+
 }
 
 # -------------------------------------------------------------------
