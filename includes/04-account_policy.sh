@@ -34,41 +34,129 @@ Requirements:
 - Preserve other content/spacing as much as reasonable.
 - Print a short confirmation for each directive set.
 AI_BLOCK
-backup="/etc/login.defs.$(date +%Y%m%d%H%M%S).bak"
-cp /etc/login.defs "$backup"
+# ...existing code...
+ap_secure_login_defs () {
+  local file="/etc/login.defs"
+  local timestamp
+  timestamp="$(date +%Y%m%d%H%M%S)"
+  local backup="${file}.${timestamp}.bak"
+  # Backup (attempt, continue on failure)
+  sudo cp -a "$file" "$backup" 2>/dev/null || echo "Warning: failed to create backup ${backup}"
 
-declare -A directives=(
-[UID_MIN]=1000
-[UID_MAX]=60000
-[GID_MIN]=1000
-[GID_MAX]=60000
-)
+  local tempfile
+  tempfile="$(mktemp)" || { echo "Failed to create tempfile"; return 1; }
 
-file="/etc/login.defs"
-tempfile=$(mktemp)
+  declare -A desired=(
+    [PASS_MAX_DAYS]=60
+    [PASS_MIN_DAYS]=10
+    [PASS_WARN_AGE]=14
+    [UMASK]=077
+  )
 
-while IFS= read -r line; do
-skip=0
-for key in "${!directives[@]}"; do
-if [[ "$line" =~ ^#?[[:space:]]*${key}[[:space:]]+ ]]; then
-echo "${key} ${directives[$key]}" >> "$tempfile"
-unset directives[$key]
-skip=1
-break
-fi
-done
-[[ $skip -eq 0 ]] && echo "$line" >> "$tempfile"
-done < "$file"
+  # Keep canonical key order for final confirmations/appends
+  local keys=(PASS_MAX_DAYS PASS_MIN_DAYS PASS_WARN_AGE UMASK)
 
-for key in "${!directives[@]}"; do
-echo "${key} ${directives[$key]}" >> "$tempfile"
-done
+  # Read original file (using sudo to ensure readability) and replace matching lines (including commented)
+  while IFS= read -r line || [ -n "$line" ]; do
+    local handled=0
+    for key in "${keys[@]}"; do
+      if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
+        printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
+        unset "desired[$key]"
+        handled=1
+        break
+      fi
+    done
+    if [ "$handled" -eq 0 ]; then
+      printf "%s\n" "$line" >> "$tempfile"
+    fi
+  done < <(sudo cat "$file" 2>/dev/null)
 
-mv "$tempfile" "$file"
+  # Append any missing directives
+  for key in "${keys[@]}"; do
+    if [[ -n "${desired[$key]+x}" ]]; then
+      printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
+      unset "desired[$key]"
+    fi
+  done
 
-for key in UID_MIN UID_MAX GID_MIN GID_MAX; do
-grep -qE "^[[:space:]]*${key}[[:space:]]+${directives[$key]:-}" "$file" && echo "${key} set to ${directives[$key]:-}" || echo "${key} set"
-done
+  # Install the new file (attempt, continue on failure)
+  sudo mv "$tempfile" "$file" 2>/dev/null || { echo "Warning: failed to install updated $file"; rm -f "$tempfile" 2>/dev/null || true; }
+
+  # Print confirmations
+  for key in "${keys[@]}"; do
+    # Extract current value from the file for confirmation
+    val="$(grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
+    if [ -n "$val" ]; then
+      echo "${key} set to ${val}"
+    else
+      echo "Failed to set ${key}"
+    fi
+  done
+}
+# ...existing code...
+```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\04-account_policy.sh
+# ...existing code...
+ap_secure_login_defs () {
+  local file="/etc/login.defs"
+  local timestamp
+  timestamp="$(date +%Y%m%d%H%M%S)"
+  local backup="${file}.${timestamp}.bak"
+  # Backup (attempt, continue on failure)
+  sudo cp -a "$file" "$backup" 2>/dev/null || echo "Warning: failed to create backup ${backup}"
+
+  local tempfile
+  tempfile="$(mktemp)" || { echo "Failed to create tempfile"; return 1; }
+
+  declare -A desired=(
+    [PASS_MAX_DAYS]=60
+    [PASS_MIN_DAYS]=10
+    [PASS_WARN_AGE]=14
+    [UMASK]=077
+  )
+
+  # Keep canonical key order for final confirmations/appends
+  local keys=(PASS_MAX_DAYS PASS_MIN_DAYS PASS_WARN_AGE UMASK)
+
+  # Read original file (using sudo to ensure readability) and replace matching lines (including commented)
+  while IFS= read -r line || [ -n "$line" ]; do
+    local handled=0
+    for key in "${keys[@]}"; do
+      if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
+        printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
+        unset "desired[$key]"
+        handled=1
+        break
+      fi
+    done
+    if [ "$handled" -eq 0 ]; then
+      printf "%s\n" "$line" >> "$tempfile"
+    fi
+  done < <(sudo cat "$file" 2>/dev/null)
+
+  # Append any missing directives
+  for key in "${keys[@]}"; do
+    if [[ -n "${desired[$key]+x}" ]]; then
+      printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
+      unset "desired[$key]"
+    fi
+  done
+
+  # Install the new file (attempt, continue on failure)
+  sudo mv "$tempfile" "$file" 2>/dev/null || { echo "Warning: failed to install updated $file"; rm -f "$tempfile" 2>/dev/null || true; }
+
+  # Print confirmations
+  for key in "${keys[@]}"; do
+    # Extract current value from the file for confirmation
+    val="$(grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
+    if [ -n "$val" ]; then
+      echo "${key} set to ${val}"
+    else
+      echo "Failed to set ${key}"
+    fi
+  done
+}
+# ...existing code...
 }
 
 # -------------------------------------------------------------------
