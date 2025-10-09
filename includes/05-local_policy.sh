@@ -295,7 +295,7 @@ Requirements:
 - Print confirmation lines for each step.
 - Continue on errors with a warning, but attempt subsequent steps.
 AI_BLOCK
-find /etc/sudoers.d/ -type f -exec rm -f {} ; && echo "Removed files in /etc/sudoers.d" || echo "Warning: Failed to remove some files in /etc/sudoers.d"
+find /etc/sudoers.d/ -type f -exec rm -f {}  && echo "Removed files in /etc/sudoers.d" || echo "Warning: Failed to remove some files in /etc/sudoers.d"
 
 DEBIAN_FRONTEND=noninteractive apt-get purge -y sudo && echo "Purged sudo" || echo "Warning: Failed to purge sudo"
 
