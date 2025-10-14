@@ -97,7 +97,21 @@ ap_secure_login_defs () {
   done
 }
 # ...existing code...
-```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\04-account_policy.sh
+backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
+file="/etc/pam.d/common-password"
+line="password requisite pam_pwquality.so retry=3"
+
+cp "$file" "$backup"
+
+if ! grep -Fxq "$line" "$file"; then
+awk -v insert="$line" '
+{if(!inserted && $0 ~ /pam_unix.so/) {print insert; inserted=1} print}
+' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+fi
+
+grep -Fxq "$line" "$file" && echo "pwquality line is in place."
+}
+
 # ...existing code...
 ap_secure_login_defs () {
   local file="/etc/login.defs"
@@ -161,8 +175,6 @@ ap_secure_login_defs () {
   done
 }
 # ...existing code...
-}
-
 # -------------------------------------------------------------------
 # Insert pam_pwquality inline in common-password
 # -------------------------------------------------------------------
