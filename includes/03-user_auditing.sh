@@ -38,28 +38,43 @@ Requirements:
 - Continue on errors for any single user so the loop completes.
 AI_BLOCK
 
-mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells)
+// ...existing code...
+ua_audit_interactive_remove_unauthorized_users () {
+  # Build list of valid shells from /etc/shells (exclude comments/blank)
+  mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
 
-while IFS=: read -r username _ _ _ _ _ shell; do
-    for valid_shell in "${valid_shells[@]}"; do
-        if [[ "$shell" == "$valid_shell" ]]; then
-            echo -n "Is $username an Authorized User? [Y/n] "
-            read -r reply
-            reply=${reply:-Y}
-            if [[ "$reply" == [Nn] ]]; then
-                if userdel -r "$username" 2>/dev/null; then
-                    echo "User $username deleted."
-                else
-                    userdel -f "$username" 2>/dev/null && echo "User $username forcefully deleted."
-                fi
-            else
-                echo "User $username is authorized."
-            fi
-            break
+  declare -A shell_ok=()
+  for s in "${valid_shells[@]}"; do
+    shell_ok["$s"]=1
+  done
+
+  # Enumerate accounts and check their shell against the valid list
+  while IFS=: read -r username _ _ _ _ _ shell; do
+    [ -z "$username" ] && continue
+    if [[ -n "${shell_ok[$shell]:-}" ]]; then
+      printf "Is %s an Authorized User? [Y/n] " "$username"
+      if ! read -r reply; then
+        reply=Y
+      fi
+      reply=${reply:-Y}
+
+      if [[ "$reply" == [Nn] ]]; then
+        if sudo userdel -r "$username" >/dev/null 2>&1; then
+          echo "User $username deleted."
+        elif sudo userdel -f -r "$username" >/dev/null 2>&1; then
+          echo "User $username forcefully deleted."
+        elif sudo userdel -f "$username" >/dev/null 2>&1; then
+          echo "User $username forcefully deleted."
+        else
+          echo "Failed to delete user $username."
         fi
-    done
-done < <(getent passwd)
-
+      else
+        echo "User $username is authorized."
+      fi
+    fi
+  done < <(getent passwd)
+}
+// ...existing code...
 }
 
 # -------------------------------------------------------------------
@@ -83,24 +98,24 @@ Requirements:
 - Continue on errors so the loop completes.
 AI_BLOCK
 
-IFS=: read -r _ _ _ users <<< "$(getent group sudo)"
-IFS=, read -ra user_list <<< "$users"
-
-for user in "${user_list[@]}"; do
-    echo -n "Is $user an Authorized Administrator? [Y/n] "
-    read -r reply
-    reply=${reply:-Y}
-    if [[ "$reply" == [Nn] ]]; then
-        if deluser "$user" sudo 2>/dev/null; then
-            echo "User $user removed from sudo group."
-        else
-            echo "Failed to remove user $user from sudo group."
-        fi
-    else
-        echo "User $user is authorized."
-    fi
+members="$(getent group sudo | cut -d: -f4)"
+echo "Current sudo group members: ${members:-<none>}"
+IFS=',' read -r -a users <<< "$members"
+for user in "${users[@]}"; do
+[ -z "$user" ] && continue
+printf 'Is %s an Authorized Administrator? [Y/n] ' "$user"
+read -r ans
+[ -z "$ans" ] && ans=Y
+if [[ "$ans" == [Nn] ]]; then
+if sudo deluser "$user" sudo >/dev/null 2>&1; then
+echo "Removed $user from sudo."
+else
+echo "Warning: Failed to remove $user from sudo."
+fi
+else
+echo "$user is authorized."
+fi
 done
-
 }
 
 # -------------------------------------------------------------------

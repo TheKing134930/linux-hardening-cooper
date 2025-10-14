@@ -37,9 +37,10 @@ AI_BLOCK
 # ...existing code...
 ap_secure_login_defs () {
   local file="/etc/login.defs"
-  local timestamp
+  local timestamp backup tempfile
   timestamp="$(date +%Y%m%d%H%M%S)"
-  local backup="${file}.${timestamp}.bak"
+  backup="${file}.${timestamp}.bak"
+
   # Backup (attempt, continue on failure)
   sudo cp -a "$file" "$backup" 2>/dev/null || echo "Warning: failed to create backup ${backup}"
 
@@ -50,27 +51,29 @@ ap_secure_login_defs () {
     [PASS_MAX_DAYS]=60
     [PASS_MIN_DAYS]=10
     [PASS_WARN_AGE]=14
-    [UMASK]=077
+    [UMASK]="077"
   )
 
   # Keep canonical key order for final confirmations/appends
   local keys=(PASS_MAX_DAYS PASS_MIN_DAYS PASS_WARN_AGE UMASK)
 
-  # Read original file (using sudo to ensure readability) and replace matching lines (including commented)
-  while IFS= read -r line || [ -n "$line" ]; do
-    local handled=0
-    for key in "${keys[@]}"; do
-      if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
-        printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
-        unset "desired[$key]"
-        handled=1
-        break
+  # If the file exists and is readable, process it; otherwise start fresh
+  if sudo test -r "$file"; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      local handled=0
+      for key in "${keys[@]}"; do
+        if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
+          printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
+          unset "desired[$key]"
+          handled=1
+          break
+        fi
+      done
+      if [ "$handled" -eq 0 ]; then
+        printf "%s\n" "$line" >> "$tempfile"
       fi
-    done
-    if [ "$handled" -eq 0 ]; then
-      printf "%s\n" "$line" >> "$tempfile"
-    fi
-  done < <(sudo cat "$file" 2>/dev/null)
+    done < <(sudo cat "$file" 2>/dev/null)
+  fi
 
   # Append any missing directives
   for key in "${keys[@]}"; do
@@ -85,8 +88,7 @@ ap_secure_login_defs () {
 
   # Print confirmations
   for key in "${keys[@]}"; do
-    # Extract current value from the file for confirmation
-    val="$(grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
+    val="$(sudo grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
     if [ -n "$val" ]; then
       echo "${key} set to ${val}"
     else
@@ -99,9 +101,10 @@ ap_secure_login_defs () {
 # ...existing code...
 ap_secure_login_defs () {
   local file="/etc/login.defs"
-  local timestamp
+  local timestamp backup tempfile
   timestamp="$(date +%Y%m%d%H%M%S)"
-  local backup="${file}.${timestamp}.bak"
+  backup="${file}.${timestamp}.bak"
+
   # Backup (attempt, continue on failure)
   sudo cp -a "$file" "$backup" 2>/dev/null || echo "Warning: failed to create backup ${backup}"
 
@@ -112,27 +115,29 @@ ap_secure_login_defs () {
     [PASS_MAX_DAYS]=60
     [PASS_MIN_DAYS]=10
     [PASS_WARN_AGE]=14
-    [UMASK]=077
+    [UMASK]="077"
   )
 
   # Keep canonical key order for final confirmations/appends
   local keys=(PASS_MAX_DAYS PASS_MIN_DAYS PASS_WARN_AGE UMASK)
 
-  # Read original file (using sudo to ensure readability) and replace matching lines (including commented)
-  while IFS= read -r line || [ -n "$line" ]; do
-    local handled=0
-    for key in "${keys[@]}"; do
-      if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
-        printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
-        unset "desired[$key]"
-        handled=1
-        break
+  # If the file exists and is readable, process it; otherwise start fresh
+  if sudo test -r "$file"; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      local handled=0
+      for key in "${keys[@]}"; do
+        if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
+          printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
+          unset "desired[$key]"
+          handled=1
+          break
+        fi
+      done
+      if [ "$handled" -eq 0 ]; then
+        printf "%s\n" "$line" >> "$tempfile"
       fi
-    done
-    if [ "$handled" -eq 0 ]; then
-      printf "%s\n" "$line" >> "$tempfile"
-    fi
-  done < <(sudo cat "$file" 2>/dev/null)
+    done < <(sudo cat "$file" 2>/dev/null)
+  fi
 
   # Append any missing directives
   for key in "${keys[@]}"; do
@@ -147,8 +152,7 @@ ap_secure_login_defs () {
 
   # Print confirmations
   for key in "${keys[@]}"; do
-    # Extract current value from the file for confirmation
-    val="$(grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
+    val="$(sudo grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
     if [ -n "$val" ]; then
       echo "${key} set to ${val}"
     else
