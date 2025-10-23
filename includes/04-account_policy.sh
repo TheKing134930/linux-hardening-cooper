@@ -7,7 +7,7 @@ invoke_account_policy () {
   ap_secure_login_defs
   ap_pam_pwquality_inline
   ap_pwquality_conf_file
-  ap_lockout_faillock
+  #ap_lockout_faillock
 
   echo -e "${CYAN}[Account Policy] Done${NC}"
 }
@@ -15,127 +15,20 @@ invoke_account_policy () {
 # -------------------------------------------------------------------
 # /etc/login.defs hardening
 # -------------------------------------------------------------------
-ap_secure_login_defs () {}
-  : <<'AI_BLOCK'
-EXPLANATION
-Harden /etc/login.defs with these exact values:
-  PASS_MAX_DAYS 60
-  PASS_MIN_DAYS 10
-  PASS_WARN_AGE 14
-  UMASK 077
 
-AI_PROMPT
-Return only Bash code (no markdown, no prose).
-Requirements:
-- Create a timestamped backup of /etc/login.defs before editing.
-- Ensure the four directives exist with the specified values:
-  - If commented or present with different values, update them.
-  - If missing, append them.
-- Preserve other content/spacing as much as reasonable.
-- Print a short confirmation for each directive set.
-AI_BLOCK
-# ...existing code...
 ap_secure_login_defs () {
-  local file="/etc/login.defs"
-  local timestamp backup tempfile
-  timestamp="$(date +%Y%m%d%H%M%S)"
-  backup="${file}.${timestamp}.bak"
-
-  # Backup (attempt, continue on failure)
-  sudo cp -a "$file" "$backup" 2>/dev/null || echo "Warning: failed to create backup ${backup}"
-
-  local tempfile
-  tempfile="$(mktemp)" || { echo "Failed to create tempfile"; return 1; }
-
-  declare -A desired=(
-    [PASS_MAX_DAYS]=60
-    [PASS_MIN_DAYS]=10
-    [PASS_WARN_AGE]=14
-    [UMASK]=077
-  )
-
-  # Keep canonical key order for final confirmations/appends
-  local keys=(PASS_MAX_DAYS PASS_MIN_DAYS PASS_WARN_AGE UMASK)
-
-  # If the file exists and is readable, process it; otherwise create new content
-  if sudo test -r "$file"; then
-    while IFS= read -r line || [ -n "$line" ]; do
-      local handled=0
-      for key in "${keys[@]}"; do
-        if [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
-          printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
-          unset "desired[$key]"
-          handled=1
-          break
-        fi
-      done
-      if [ "$handled" -eq 0 ]; then
-        printf "%s\n" "$line" >> "$tempfile"
-      fi
-    done < <(sudo cat "$file" 2>/dev/null)
-  fi
-
-  # Append any missing directives
-  for key in "${keys[@]}"; do
-    if [[ -n "${desired[$key]+x}" ]]; then
-      printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
-      unset "desired[$key]"
-    fi
-  done
-
-  # Install the new file (attempt, continue on failure)
-  sudo mv "$tempfile" "$file" 2>/dev/null || { echo "Warning: failed to install updated $file"; rm -f "$tempfile" 2>/dev/null || true; }
-
-  # Print confirmations
-  for key in "${keys[@]}"; do
-    val="$(sudo grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
-    if [ -n "$val" ]; then
-      echo "${key} set to ${val}"
-    else
-      echo "Failed to set ${key}"
-    fi
-  done
-}
-# ...existing code...
-#```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\04-account_policy.sh
-backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
-file="/etc/pam.d/common-password"
-line="password requisite pam_pwquality.so retry=3"
-
-cp "$file" "$backup"
-
-if ! grep -Fxq "$line" "$file"; then
-awk -v insert="$line" '
-{if(!inserted && $0 ~ /pam_unix.so/) {print insert; inserted=1} print}
-' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
-fi
-
-grep -Fxq "$line" "$file" && echo "pwquality line is in place."
+  sudo sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS\t60/g' /etc/login.defs
+  sudo sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS\t10/g' /etc/login.defs
+  sudo sed -i 's/^PASS_WARN_AGE.*/PASS_WARN_AGE\t14/g' /etc/login.defs
+  sudo sed -i 's/^UMASK.*/UMASK\t077/g' /etc/login.defs
 }
 
-# ...existing code...
+
 
 # -------------------------------------------------------------------
 # Insert pam_pwquality inline in common-password
 # -------------------------------------------------------------------
 ap_pam_pwquality_inline () {
-  : <<'AI_BLOCK'
-EXPLANATION
-Insert a pwquality rule into /etc/pam.d/common-password before the pam_unix.so line.
-
-Desired line (single line, exact options/order):
-  password requisite pam_pwquality.so retry=3 minlen=10 difok=5 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1
-
-AI_PROMPT
-Return only Bash code (no markdown, no prose).
-Requirements:
-- Target file: /etc/pam.d/common-password.
-- Create a timestamped backup before editing.
-- If an equal pwquality line already exists, do nothing.
-- Otherwise insert the exact line immediately before the first occurrence of pam_unix.so in that file.
-- Ensure the edit is idempotent (running again won�t duplicate).
-- Print a brief confirmation when the line is in place.
-AI_BLOCK
 backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
 file="/etc/pam.d/common-password"
 line="password requisite pam_pwquality.so retry=3"
