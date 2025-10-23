@@ -18,8 +18,7 @@ invoke_user_auditing () {
 # -------------------------------------------------------------------
 # 1) Interactive audit of local users with valid login shells
 # -------------------------------------------------------------------
-ua_audit_interactive_remove_unauthorized_users () {
-  : <<'AI_BLOCK'
+
 EXPLANATION
 Enumerate local accounts that have a valid login shell (from /etc/shells). For each such user,
 prompt: "Is <user> an Authorized User? [Y/n]". Default to Y when the user presses Enter.
@@ -38,7 +37,7 @@ Requirements:
 - Continue on errors for any single user so the loop completes.
 AI_BLOCK
 
-// ...existing code...
+#...existing code...
 ua_audit_interactive_remove_unauthorized_users () {
   # Build list of valid shells from /etc/shells (exclude comments/blank)
   mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
@@ -74,14 +73,12 @@ ua_audit_interactive_remove_unauthorized_users () {
     fi
   done < <(getent passwd)
 }
-// ...existing code...
+...existing code...
 }
-
 # -------------------------------------------------------------------
 # 2) Interactive audit of sudoers; remove unauthorized admins
 # -------------------------------------------------------------------
-ua_audit_interactive_remove_unauthorized_sudoers () {
-  : <<'AI_BLOCK'
+
 EXPLANATION
 List current members of the 'sudo' group and ask per-user whether they should remain an admin.
 Default answer is Y. If the answer is 'n' or 'N', remove that user from 'sudo'.
