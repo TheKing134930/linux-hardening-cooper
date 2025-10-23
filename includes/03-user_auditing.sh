@@ -124,7 +124,7 @@ ua_audit_interactive_remove_unauthorized_sudoers () {
     fi
   done
 }
-```filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\03-user_auditing.sh
+filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\03-user_auditing.sh
 ua_audit_interactive_remove_unauthorized_sudoers () {
   members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
   echo "Current sudo group members: ${members:-<none>}"
