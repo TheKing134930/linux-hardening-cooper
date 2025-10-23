@@ -292,13 +292,22 @@ Requirements:
 - Print "Changed shell for <user> to /usr/sbin/nologin." for each change.
 - Continue on errors so the loop completes.
 AI_BLOCK
-while IFS=: read -r user _ uid _ _ _ _; do
+ua_set_shells_system_accounts_nologin () {
+while IFS=: read -r username _ uid _ _ _ shell; do
+[ -z "$username" ] && continue
+case "$uid" in
+''|([!0-9]) continue ;;
+esac
 if [ "$uid" -ge 1 ] && [ "$uid" -le 999 ]; then
-if usermod -s /usr/sbin/nologin "$user" 2>/dev/null; then
-echo "Changed shell for $user to /usr/sbin/nologin."
+if [ "$shell" = "/usr/sbin/nologin" ]; then
+continue
+fi
+if usermod -s /usr/sbin/nologin "$username" >/dev/null 2>&1; then
+echo "Changed shell for $username to /usr/sbin/nologin."
 else
-echo "Failed to change shell for $user."
+echo "Failed to change shell for $username."
 fi
 fi
 done < /etc/passwd
+}
 }
