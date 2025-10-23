@@ -155,8 +155,22 @@ ua_audit_interactive_remove_unauthorized_sudoers () {
 # 3) Force temporary passwords for all users
 # -------------------------------------------------------------------
 ua_force_temp_passwords () {
+  : <<'AI_BLOCK'
+EXPLANATION
+Set a temporary password for every local account using SHA-512 hashing with chpasswd.
+If $TEMP_PASSWORD is set, use it; otherwise use the default "1CyberPatriot!".
 
-PASSWORD="${TEMP_PASSWORD:1CyberPatriot!}"
+AI_PROMPT
+Return only Bash code (no markdown, no prose).
+Requirements:
+- Determine the password as: ${TEMP_PASSWORD:-1CyberPatriot!}.
+- Iterate over all usernames from getent passwd.
+- For each username, set "<user>:<password>" via chpasswd with SHA-512.
+- Continue on errors so one failure does not stop the loop.
+- Print a brief status line per user or a final summary.
+AI_BLOCK
+
+PASSWORD="${TEMP_PASSWORD:-1CyberPatriot!}"
 success=0
 failure=0
 
@@ -262,17 +276,38 @@ fi
 done < /etc/passwd
 }
 
-# -------------------------------------------------------------------
+
 # 7) Set shells for system accounts to /usr/sbin/nologin
 # -------------------------------------------------------------------
-
 ua_set_shells_system_accounts_nologin () {
-#!/bin/bash
-# Loop through all users with UID between 1 and 999 and change their shell
+  : <<'AI_BLOCK'
+EXPLANATION
+For system accounts (UID 1..999), set the shell to /usr/sbin/nologin.
 
-awk -F: '($3 >= 1 && $3 <= 999) {print $1}' /etc/passwd | while read user; do
-    echo "Changing shell for $user to /usr/sbin/nologin"
-    usermod -s /usr/sbin/nologin "$user"
-done
-
+AI_PROMPT
+Return only Bash code (no markdown, no prose).
+Requirements:
+- Read /etc/passwd line by line.
+- If UID is between 1 and 999 inclusive, set the shell to /usr/sbin/nologin using usermod -s.
+- Print "Changed shell for <user> to /usr/sbin/nologin." for each change.
+- Continue on errors so the loop completes.
+AI_BLOCK
+ua_set_shells_system_accounts_nologin () {
+while IFS=: read -r username _ uid _ _ _ shell; do
+[ -z "$username" ] && continue
+case "$uid" in
+''|([!0-9]) continue ;;
+esac
+if [ "$uid" -ge 1 ] && [ "$uid" -le 999 ]; then
+if [ "$shell" = "/usr/sbin/nologin" ]; then
+continue
+fi
+if usermod -s /usr/sbin/nologin "$username" >/dev/null 2>&1; then
+echo "Changed shell for $username to /usr/sbin/nologin."
+else
+echo "Failed to change shell for $username."
+fi
+fi
+done < /etc/passwd
+}
 }
