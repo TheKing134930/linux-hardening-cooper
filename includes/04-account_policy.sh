@@ -15,7 +15,7 @@ invoke_account_policy () {
 # -------------------------------------------------------------------
 # /etc/login.defs hardening
 # -------------------------------------------------------------------
-ap_secure_login_defs () {
+ap_secure_login_defs () {}
   : <<'AI_BLOCK'
 EXPLANATION
 Harden /etc/login.defs with these exact values:
@@ -51,18 +51,18 @@ ap_secure_login_defs () {
     [PASS_MAX_DAYS]=60
     [PASS_MIN_DAYS]=10
     [PASS_WARN_AGE]=14
-    [UMASK]="077"
+    [UMASK]=077
   )
 
   # Keep canonical key order for final confirmations/appends
   local keys=(PASS_MAX_DAYS PASS_MIN_DAYS PASS_WARN_AGE UMASK)
 
-  # If the file exists and is readable, process it; otherwise start fresh
+  # If the file exists and is readable, process it; otherwise create new content
   if sudo test -r "$file"; then
     while IFS= read -r line || [ -n "$line" ]; do
       local handled=0
       for key in "${keys[@]}"; do
-        if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
+        if [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
           printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
           unset "desired[$key]"
           handled=1
@@ -114,68 +114,7 @@ grep -Fxq "$line" "$file" && echo "pwquality line is in place."
 }
 
 # ...existing code...
-ap_secure_login_defs () {
-  local file="/etc/login.defs"
-  local timestamp backup tempfile
-  timestamp="$(date +%Y%m%d%H%M%S)"
-  backup="${file}.${timestamp}.bak"
 
-  # Backup (attempt, continue on failure)
-  sudo cp -a "$file" "$backup" 2>/dev/null || echo "Warning: failed to create backup ${backup}"
-
-  local tempfile
-  tempfile="$(mktemp)" || { echo "Failed to create tempfile"; return 1; }
-
-  declare -A desired=(
-    [PASS_MAX_DAYS]=60
-    [PASS_MIN_DAYS]=10
-    [PASS_WARN_AGE]=14
-    [UMASK]="077"
-  )
-
-  # Keep canonical key order for final confirmations/appends
-  local keys=(PASS_MAX_DAYS PASS_MIN_DAYS PASS_WARN_AGE UMASK)
-
-  # If the file exists and is readable, process it; otherwise start fresh
-  if sudo test -r "$file"; then
-    while IFS= read -r line || [ -n "$line" ]; do
-      local handled=0
-      for key in "${keys[@]}"; do
-        if [[ -n "${desired[$key]+x}" ]] && [[ "$line" =~ ^[[:space:]]*#?[[:space:]]*${key}([[:space:]]+|=) ]]; then
-          printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
-          unset "desired[$key]"
-          handled=1
-          break
-        fi
-      done
-      if [ "$handled" -eq 0 ]; then
-        printf "%s\n" "$line" >> "$tempfile"
-      fi
-    done < <(sudo cat "$file" 2>/dev/null)
-  fi
-
-  # Append any missing directives
-  for key in "${keys[@]}"; do
-    if [[ -n "${desired[$key]+x}" ]]; then
-      printf "%s %s\n" "$key" "${desired[$key]}" >> "$tempfile"
-      unset "desired[$key]"
-    fi
-  done
-
-  # Install the new file (attempt, continue on failure)
-  sudo mv "$tempfile" "$file" 2>/dev/null || { echo "Warning: failed to install updated $file"; rm -f "$tempfile" 2>/dev/null || true; }
-
-  # Print confirmations
-  for key in "${keys[@]}"; do
-    val="$(sudo grep -E "^[[:space:]]*${key}([[:space:]]+|=)" "$file" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*'"${key}"'[[:space:]]*[= ]*[[:space:]]*//')"
-    if [ -n "$val" ]; then
-      echo "${key} set to ${val}"
-    else
-      echo "Failed to set ${key}"
-    fi
-  done
-}
-# ...existing code...
 # -------------------------------------------------------------------
 # Insert pam_pwquality inline in common-password
 # -------------------------------------------------------------------

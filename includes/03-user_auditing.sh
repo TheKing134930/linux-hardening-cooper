@@ -98,27 +98,59 @@ Requirements:
 - Continue on errors so the loop completes.
 AI_BLOCK
 
-members="$(getent group sudo | cut -d: -f4)"
-echo "Current sudo group members: ${members:-<none>}"
-IFS=',' read -r -a users <<< "$members"
-for user in "${users[@]}"; do
-[ -z "$user" ] && continue
-printf 'Is %s an Authorized Administrator? [Y/n] ' "$user"
-read -r ans
-[ -z "$ans" ] && ans=Y
-if [[ "$ans" == [Nn] ]]; then
-if sudo deluser "$user" sudo >/dev/null 2>&1; then
-echo "Removed $user from sudo."
-else
-echo "Warning: Failed to remove $user from sudo."
-fi
-else
-echo "$user is authorized."
-fi
-done
+ua_audit_interactive_remove_unauthorized_sudoers () {
+  members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
+  echo "Current sudo group members: ${members:-<none>}"
+  IFS=',' read -r -a users <<< "${members:-}"
 
+  for user in "${users[@]}"; do
+    user="$(echo "$user" | xargs)"
+    [ -z "$user" ] && continue
+
+    printf "Is %s an Authorized Administrator? [Y/n] " "$user"
+    if ! read -r ans; then
+      ans=Y
+    fi
+    ans=${ans:-Y}
+
+    if [[ "$ans" == [Nn] ]]; then
+      if sudo deluser "$user" sudo >/dev/null 2>&1; then
+        echo "Removed $user from sudo."
+      else
+        echo "Warning: Failed to remove $user from sudo."
+      fi
+    else
+      echo "$user is authorized."
+    fi
+  done
 }
+```filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\03-user_auditing.sh
+ua_audit_interactive_remove_unauthorized_sudoers () {
+  members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
+  echo "Current sudo group members: ${members:-<none>}"
+  IFS=',' read -r -a users <<< "${members:-}"
 
+  for user in "${users[@]}"; do
+    user="$(echo "$user" | xargs)"
+    [ -z "$user" ] && continue
+
+    printf "Is %s an Authorized Administrator? [Y/n] " "$user"
+    if ! read -r ans; then
+      ans=Y
+    fi
+    ans=${ans:-Y}
+
+    if [[ "$ans" == [Nn] ]]; then
+      if sudo deluser "$user" sudo >/dev/null 2>&1; then
+        echo "Removed $user from sudo."
+      else
+        echo "Warning: Failed to remove $user from sudo."
+      fi
+    else
+      echo "$user is authorized."
+    fi
+  done
+}
 # -------------------------------------------------------------------
 # 3) Force temporary passwords for all users
 # -------------------------------------------------------------------
