@@ -265,36 +265,14 @@ done < /etc/passwd
 # -------------------------------------------------------------------
 # 7) Set shells for system accounts to /usr/sbin/nologin
 # -------------------------------------------------------------------
-ua_set_shells_system_accounts_nologin () {
-  : <<'AI_BLOCK'
-EXPLANATION
-For system accounts (UID 1..999), set the shell to /usr/sbin/nologin.
 
-AI_PROMPT
-Return only Bash code (no markdown, no prose).
-Requirements:
-- Read /etc/passwd line by line.
-- If UID is between 1 and 999 inclusive, set the shell to /usr/sbin/nologin using usermod -s.
-- Print "Changed shell for <user> to /usr/sbin/nologin." for each change.
-- Continue on errors so the loop completes.
-AI_BLOCK
 ua_set_shells_system_accounts_nologin () {
-while IFS=: read -r username _ uid _ _ _ shell; do
-[ -z "$username" ] && continue
-case "$uid" in
-0) continue ;;
-1|2|3|4|5|6|7|8|9|1[0-9][0-9]) shell="/usr/sbin/nologin" ;;
-esac
-if [ "$uid" -ge 1 ] && [ "$uid" -le 999 ]; then
-if [ "$shell" = "/usr/sbin/nologin" ]; then
-continue
-fi
-if usermod -s /usr/sbin/nologin "$username" >/dev/null 2>&1; then
-echo "Changed shell for $username to /usr/sbin/nologin."
-else
-echo "Failed to change shell for $username."
-fi
-fi
-done < /etc/passwd
-}
+#!/bin/bash
+# Loop through all users with UID between 1 and 999 and change their shell
+
+awk -F: '($3 >= 1 && $3 <= 999) {print $1}' /etc/passwd | while read user; do
+    echo "Changing shell for $user to /usr/sbin/nologin"
+    usermod -s /usr/sbin/nologin "$user"
+done
+
 }
