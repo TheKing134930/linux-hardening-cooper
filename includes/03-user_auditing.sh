@@ -266,7 +266,6 @@ done < /etc/passwd
 # 7) Set shells for system accounts to /usr/sbin/nologin
 # -------------------------------------------------------------------
 
-ua_set_shells_system_accounts_nologin () {
 ua_set_shells_system_accounts_nologin() {
     # Loop through all users with UID between 1 and 999 (excluding root)
     awk -F: '($3 >= 1 && $3 <= 999) {print $1}' /etc/passwd | while IFS= read -r user; do
