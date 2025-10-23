@@ -18,7 +18,10 @@ invoke_user_auditing () {
 # -------------------------------------------------------------------
 # 1) Interactive audit of local users with valid login shells
 # -------------------------------------------------------------------
-ua_audit_interactive_remove_unauthorized_users () {
+
+#!/bin/bash
+
+a_audit_interactive_remove_unauthorized_users() {
   : <<'AI_BLOCK'
 EXPLANATION
 Enumerate local accounts that have a valid login shell (from /etc/shells). For each such user,
@@ -38,51 +41,57 @@ Requirements:
 - Continue on errors for any single user so the loop completes.
 AI_BLOCK
 
-// ...existing code...
-ua_audit_interactive_remove_unauthorized_users () {
-  # Build list of valid shells from /etc/shells (exclude comments/blank)
-  mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
+  # ...existing code...
+  ua_audit_interactive_remove_unauthorized_users() {
+    # Build list of valid shells from /etc/shells (exclude comments/blank)
+    mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
 
-  declare -A shell_ok=()
-  for s in "${valid_shells[@]}"; do
-    shell_ok["$s"]=1
-  done
+    declare -A shell_ok=()
+    for s in "${valid_shells[@]}"; do
+      shell_ok["$s"]=1
+    done
 
-  # Enumerate accounts and check their shell against the valid list
-  while IFS=: read -r username _ _ _ _ _ shell; do
-    [ -z "$username" ] && continue
-    if [[ -n "${shell_ok[$shell]:-}" ]]; then
-      printf "Is %s an Authorized User? [Y/n] " "$username"
-      if ! read -r reply; then
-        reply=Y
-      fi
-      reply=${reply:-Y}
-
-      if [[ "$reply" == [Nn] ]]; then
-        if sudo userdel -r "$username" >/dev/null 2>&1; then
-          echo "User $username deleted."
-        elif sudo userdel -f -r "$username" >/dev/null 2>&1; then
-          echo "User $username forcefully deleted."
-        elif sudo userdel -f "$username" >/dev/null 2>&1; then
-          echo "User $username forcefully deleted."
-        else
-          echo "Failed to delete user $username."
+    # Enumerate accounts and check their shell against the valid list
+    while IFS=: read -r username _ _ _ _ _ shell; do
+      [ -z "$username" ] && continue
+      if [[ -n "${shell_ok[$shell]:-}" ]]; then
+        printf "Is %s an Authorized User? [Y/n] " "$username"
+        if ! read -r reply; then
+          reply=Y
         fi
-      else
-        echo "User $username is authorized."
+        reply=${reply:-Y}
+
+        if [[ "$reply" == [Nn] ]]; then
+          if sudo userdel -r "$username" >/dev/null 2>&1; then
+            echo "User $username deleted."
+          elif sudo userdel -f -r "$username" >/dev/null 2>&1; then
+            echo "User $username forcefully deleted."
+          elif sudo userdel -f "$username" >/dev/null 2>&1; then
+            echo "User $username forcefully deleted."
+          else
+            echo "Failed to delete user $username."
+          fi
+        else
+          echo "User $username is authorized."
+        fi
       fi
-    fi
-  done < <(getent passwd)
-}
-// ...existing code...
+    done < <(getent passwd)
+  }
+
+  # ...existing code...
 }
 
 # -------------------------------------------------------------------
 # 2) Interactive audit of sudoers; remove unauthorized admins
 # -------------------------------------------------------------------
-ua_audit_interactive_remove_unauthorized_sudoers () {
+ua_audit_interactive_remove_unauthorized_sudoers() {
   : <<'AI_BLOCK'
-EXPLANATION
+  (sudoer audit explanation and requirements go here)
+AI_BLOCK
+}
+
+  : <<'AI_BLOCK'
+  EXPLANATION
 List current members of the 'sudo' group and ask per-user whether they should remain an admin.
 Default answer is Y. If the answer is 'n' or 'N', remove that user from 'sudo'.
 
