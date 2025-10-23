@@ -170,7 +170,7 @@ Requirements:
 - Print a brief status line per user or a final summary.
 AI_BLOCK
 
-PASSWORD="${TEMP_PASSWORD:-1CyberPatriot!}"
+PASSWORD="${TEMP_PASSWORD:1CyberPatriot!}"
 success=0
 failure=0
 
