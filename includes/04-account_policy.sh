@@ -97,7 +97,7 @@ ap_secure_login_defs () {
   done
 }
 # ...existing code...
-```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\04-account_policy.sh
+#```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\04-account_policy.sh
 backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
 file="/etc/pam.d/common-password"
 line="password requisite pam_pwquality.so retry=3"
