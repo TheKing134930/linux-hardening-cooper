@@ -282,7 +282,8 @@ ua_set_shells_system_accounts_nologin () {
 while IFS=: read -r username _ uid _ _ _ shell; do
 [ -z "$username" ] && continue
 case "$uid" in
-''|([!0-9]) continue ;;
+0) continue ;;
+1|2|3|4|5|6|7|8|9|1[0-9][0-9]) shell="/usr/sbin/nologin" ;;
 esac
 if [ "$uid" -ge 1 ] && [ "$uid" -le 999 ]; then
 if [ "$shell" = "/usr/sbin/nologin" ]; then
