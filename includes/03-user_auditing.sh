@@ -267,12 +267,12 @@ done < /etc/passwd
 # -------------------------------------------------------------------
 
 ua_set_shells_system_accounts_nologin () {
-#!/bin/bash
-# Loop through all users with UID between 1 and 999 and change their shell
-
-awk -F: '($3 >= 1 && $3 <= 999) {print $1}' /etc/passwd | while read user; do
-    echo "Changing shell for $user to /usr/sbin/nologin"
-    usermod -s /usr/sbin/nologin "$user"
-done
-
+ua_set_shells_system_accounts_nologin() {
+    # Loop through all users with UID between 1 and 999 (excluding root)
+    awk -F: '($3 >= 1 && $3 <= 999) {print $1}' /etc/passwd | while IFS= read -r user; do
+        echo "Changing shell for $user to /usr/sbin/nologin"
+        if ! usermod -s /usr/sbin/nologin "$user" 2>/dev/null; then
+            echo "Failed to change shell for $user" >&2
+        fi
+    done
 }
