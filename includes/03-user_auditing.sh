@@ -155,20 +155,6 @@ ua_audit_interactive_remove_unauthorized_sudoers () {
 # 3) Force temporary passwords for all users
 # -------------------------------------------------------------------
 ua_force_temp_passwords () {
-  : <<'AI_BLOCK'
-EXPLANATION
-Set a temporary password for every local account using SHA-512 hashing with chpasswd.
-If $TEMP_PASSWORD is set, use it; otherwise use the default "1CyberPatriot!".
-
-AI_PROMPT
-Return only Bash code (no markdown, no prose).
-Requirements:
-- Determine the password as: ${TEMP_PASSWORD:-1CyberPatriot!}.
-- Iterate over all usernames from getent passwd.
-- For each username, set "<user>:<password>" via chpasswd with SHA-512.
-- Continue on errors so one failure does not stop the loop.
-- Print a brief status line per user or a final summary.
-AI_BLOCK
 
 PASSWORD="${TEMP_PASSWORD:1CyberPatriot!}"
 success=0

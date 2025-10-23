@@ -5,6 +5,7 @@ invoke_account_policy () {
   echo -e "${CYAN}[Account Policy] Start${NC}"
 
   ap_secure_login_defs
+  ap_blankpasswords_disallow
   ap_pam_pwquality_inline
   ap_pwquality_conf_file
   #ap_lockout_faillock
@@ -23,7 +24,9 @@ ap_secure_login_defs () {
   sudo sed -i 's/^UMASK.*/UMASK\t077/g' /etc/login.defs
 }
 
-
+ap_blankpasswords_disallow () {
+sed -i '/pam_unix.so/s/nullok[_secure]*//g' /etc/pam.d/common-auth
+}
 
 # -------------------------------------------------------------------
 # Insert pam_pwquality inline in common-password
