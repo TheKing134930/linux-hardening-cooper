@@ -107,16 +107,44 @@ Requirements:
 - Continue on errors so the loop completes.
 AI_BLOCK
 
-ua_audit_interactive_remove_unauthorized_sudoers() {
+ua_audit_interactive_remove_unauthorized_sudoers () {
   members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
-  echo "Current sudo group members: ${members:-<none>}"
   IFS=',' read -r -a users <<< "${members:-}"
 
   for user in "${users[@]}"; do
-    user="$(echo "$user" | xargs)"   # trim whitespace
+    user="$(echo "$user" | xargs)"
     [ -z "$user" ] && continue
 
-    read -r -p "Is ${user} an Authorized Administrator? [Y/n] " ans || ans=Y
+    printf "Is %s an Authorized Administrator? [Y/n] " "$user"
+    if ! read -r ans; then
+      ans=Y
+    fi
+    ans=${ans:-Y}
+
+    if [[ $ans =~ ^[Nn] ]]; then
+      if sudo deluser "$user" sudo >/dev/null 2>&1; then
+        echo "Removed $user from sudo."
+      else
+        echo "Warning: Failed to remove $user from sudo."
+      fi
+    else
+      echo "$user is authorized."
+    fi
+  done
+}
+```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\03-user_auditing.sh
+ua_audit_interactive_remove_unauthorized_sudoers () {
+  members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
+  IFS=',' read -r -a users <<< "${members:-}"
+
+  for user in "${users[@]}"; do
+    user="$(echo "$user" | xargs)"
+    [ -z "$user" ] && continue
+
+    printf "Is %s an Authorized Administrator? [Y/n] " "$user"
+    if ! read -r ans; then
+      ans=Y
+    fi
     ans=${ans:-Y}
 
     # treat anything starting with N or n as No (accept "n", "N", "no", "No", etc.)
