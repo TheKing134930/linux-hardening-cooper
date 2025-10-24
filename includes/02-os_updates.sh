@@ -41,6 +41,61 @@ Requirements:
 - Print a brief confirmation of what was changed or skipped.
 AI_BLOCK
 }
+#!/usr/bin/env bash
+
+set -e
+
+# Ensure required vars
+if [[ -z "$DISTRO" || -z "$CODENAME" ]]; then
+  echo "Error: DISTRO and CODENAME must be set in the environment."
+  exit 1
+fi
+
+case "$DISTRO" in
+  Ubuntu)
+    FILE="/etc/apt/sources.list"
+    BACKUP="${FILE}.bak"
+    if [[ -f "$FILE" ]]; then
+      sudo cp "$FILE" "$BACKUP"
+      echo "Backup created: $BACKUP"
+    fi
+    sudo tee "$FILE" > /dev/null <<EOF
+deb http://archive.ubuntu.com/ubuntu/ ${CODENAME} main universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ ${CODENAME}-updates main universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ ${CODENAME}-security main universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ ${CODENAME}-backports main universe multiverse
+EOF
+    echo "Ubuntu sources refreshed for $CODENAME."
+    ;;
+    
+  "Linux Mint"|"LinuxMint"|"mint")
+    source /etc/os-release
+    UBUNTU_CODENAME=${UBUNTU_CODENAME:-$(grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2)}
+    FILE="/etc/apt/sources.list.d/official-package-repositories.list"
+    BACKUP="${FILE}.bak"
+    if [[ -f "$FILE" ]]; then
+      sudo cp "$FILE" "$BACKUP"
+      echo "Backup created: $BACKUP"
+    fi
+    sudo tee "$FILE" > /dev/null <<EOF
+deb http://packages.linuxmint.com ${CODENAME} main upstream import backport
+deb http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME} main universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-updates main universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-backports main universe multiverse
+deb http://security.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-security main universe multiverse
+EOF
+    echo "Linux Mint sources refreshed for $CODENAME (Ubuntu base: $UBUNTU_CODENAME)."
+    ;;
+    
+  Debian)
+    echo "Debian detected; leaving sources as-is."
+    ;;
+    
+  *)
+    echo "Unsupported distro: $DISTRO"
+    exit 1
+    ;;
+esac
 
 # ------------------------------------------------------------
 # apt update
@@ -59,6 +114,14 @@ Requirements:
 AI_BLOCK
 }
 
+#!/usr/bin/env bash
+
+set -e
+
+echo "Refreshing package lists..."
+sudo apt update -y
+echo "Package lists updated successfully."
+
 # ------------------------------------------------------------
 # apt --fix-broken install
 # ------------------------------------------------------------
@@ -75,6 +138,14 @@ Requirements:
 - Print a short status line on completion.
 AI_BLOCK
 }
+
+#!/usr/bin/env bash
+
+set -e
+
+echo "Attempting to fix broken package dependencies..."
+sudo apt install -f -y
+echo "Broken package dependencies fixed."
 
 # ------------------------------------------------------------
 # apt-mark: unhold all currently held packages
@@ -97,3 +168,21 @@ Requirements:
 AI_BLOCK
 }
 
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+HELD_PACKAGES=$(apt-mark showhold)
+
+if [[ -z "$HELD_PACKAGES" ]]; then
+  echo "No held packages found."
+  exit 0
+fi
+
+echo "$HELD_PACKAGES" | while IFS= read -r pkg; do
+  if sudo apt-mark unhold "$pkg"; then
+    echo "Unheld: $pkg"
+  else
+    echo "Warning: Failed to unhold $pkg" >&2
+  fi
+done
