@@ -41,16 +41,16 @@ Requirements:
 - Continue on errors for any single user so the loop completes.
 AI_BLOCK
 
-  # ...existing code...
-  ua_audit_interactive_remove_unauthorized_users() {
+    # ...existing code...
+  ua_audit_interactive_remove_unauthorized_users () {
     # Build list of valid shells from /etc/shells (exclude comments/blank)
     mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
-
+  
     declare -A shell_ok=()
     for s in "${valid_shells[@]}"; do
       shell_ok["$s"]=1
     done
-
+  
     # Enumerate accounts and check their shell against the valid list
     while IFS=: read -r username _ _ _ _ _ shell; do
       [ -z "$username" ] && continue
@@ -60,7 +60,7 @@ AI_BLOCK
           reply=Y
         fi
         reply=${reply:-Y}
-
+  
         if [[ "$reply" == [Nn] ]]; then
           if sudo userdel -r "$username" >/dev/null 2>&1; then
             echo "User $username deleted."
@@ -107,22 +107,20 @@ Requirements:
 - Continue on errors so the loop completes.
 AI_BLOCK
 
-ua_audit_interactive_remove_unauthorized_sudoers () {
+ua_audit_interactive_remove_unauthorized_sudoers() {
   members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
   echo "Current sudo group members: ${members:-<none>}"
   IFS=',' read -r -a users <<< "${members:-}"
 
   for user in "${users[@]}"; do
-    user="$(echo "$user" | xargs)"
+    user="$(echo "$user" | xargs)"   # trim whitespace
     [ -z "$user" ] && continue
 
-    printf "Is %s an Authorized Administrator? [Y/n] " "$user"
-    if ! read -r ans; then
-      ans=Y
-    fi
+    read -r -p "Is ${user} an Authorized Administrator? [Y/n] " ans || ans=Y
     ans=${ans:-Y}
 
-    if [[ "$ans" == [Nn] ]]; then
+    # treat anything starting with N or n as No (accept "n", "N", "no", "No", etc.)
+    if [[ $ans =~ ^[Nn] ]]; then
       if sudo deluser "$user" sudo >/dev/null 2>&1; then
         echo "Removed $user from sudo."
       else
@@ -133,33 +131,7 @@ ua_audit_interactive_remove_unauthorized_sudoers () {
     fi
   done
 }
-filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\03-user_auditing.sh
-ua_audit_interactive_remove_unauthorized_sudoers () {
-  members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
-  echo "Current sudo group members: ${members:-<none>}"
-  IFS=',' read -r -a users <<< "${members:-}"
 
-  for user in "${users[@]}"; do
-    user="$(echo "$user" | xargs)"
-    [ -z "$user" ] && continue
-
-    printf "Is %s an Authorized Administrator? [Y/n] " "$user"
-    if ! read -r ans; then
-      ans=Y
-    fi
-    ans=${ans:-Y}
-
-    if [[ "$ans" == [Nn] ]]; then
-      if sudo deluser "$user" sudo >/dev/null 2>&1; then
-        echo "Removed $user from sudo."
-      else
-        echo "Warning: Failed to remove $user from sudo."
-      fi
-    else
-      echo "$user is authorized."
-    fi
-  done
-}
 # -------------------------------------------------------------------
 # 3) Force temporary passwords for all users
 # -------------------------------------------------------------------
