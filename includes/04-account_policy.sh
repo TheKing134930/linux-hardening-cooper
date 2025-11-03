@@ -77,40 +77,44 @@ Requirements:
 - Keep changes idempotent.
 - Print a short confirmation after applying settings.
 AI_BLOCK
-backup="/etc/security/pwquality.conf.$(date +%Y%m%d%H%M%S).bak"
-file="/etc/security/pwquality.conf"
-cp "$file" "$backup"
+#!/bin/bash
+set -euo pipefail
 
-declare -A keys=(
-[minlen]=12
-[dcredit]=-1
-[ucredit]=-1
-[ocredit]=-1
-[lcredit]=-1
-)
+ua_configure_pwquality() {
+  file="/etc/security/pwquality.conf"
+  backup="${file}.$(date +%F_%H-%M-%S).bak"
 
-tempfile=$(mktemp)
+  echo "Creating backup of $file at $backup"
+  sudo cp "$file" "$backup"
 
-while IFS= read -r line; do
-modified=0
-for k in "${!keys[@]}"; do
-if [[ "$line" =~ ^[[:space:]]#?[[:space:]]$k[[:space:]]*= ]]; then
-echo "$k = ${keys[$k]}" >> "$tempfile"
-unset keys[$k]
-modified=1
-break
-fi
-done
-[[ $modified -eq 0 ]] && echo "$line" >> "$tempfile"
-done < "$file"
+  declare -A settings=(
+    [minlen]=10
+    [minclass]=2
+    [maxrepeat]=2
+    [maxclassrepeat]=6
+    [lcredit]=-1
+    [ucredit]=-1
+    [dcredit]=-1
+    [ocredit]=-1
+    [maxsequence]=2
+    [difok]=5
+    [gecoscheck]=1
+  )
 
-for k in "${!keys[@]}"; do
-echo "$k = ${keys[$k]}" >> "$tempfile"
-done
+  for key in "${!settings[@]}"; do
+    value="${settings[$key]}"
+    if grep -Eq "^[#\s]*${key}\s*=" "$file"; then
+      sudo sed -i "s|^[#\s]*${key}\s*=.*|${key} = ${value}|" "$file"
+    else
+      echo "${key} = ${value}" | sudo tee -a "$file" >/dev/null
+    fi
+  done
 
-mv "$tempfile" "$file"
+  echo "pwquality.conf successfully configured."
+}
 
-echo "pwquality.conf settings applied."
+ua_configure_pwquality
+
 }
 
 # -------------------------------------------------------------------
@@ -141,61 +145,34 @@ Requirements:
 - Keep the edit idempotent (no duplicates on subsequent runs).
 - Print simple confirmations indicating which lines were added or already present.
 AI_BLOCK
-backup_auth="/etc/pam.d/common-auth.$(date +%Y%m%d%H%M%S).bak"
-backup_account="/etc/pam.d/common-account.$(date +%Y%m%d%H%M%S).bak"
+#!/bin/bash
+set -euo pipefail
 
-file_auth="/etc/pam.d/common-auth"
-file_account="/etc/pam.d/common-account"
+ua_configure_pam_faillock() 
+  auth_file="/etc/pam.d/common-auth"
+  account_file="/etc/pam.d/common-account"
+  ts=$(date +%F_%H-%M-%S)
+  sudo cp "$auth_file" "${auth_file}.${ts}.bak"
+  sudo cp "$account_file" "${account_file}.${ts}.bak"
 
-cp "$file_auth" "$backup_auth"
-cp "$file_account" "$backup_account"
+  declare -a auth_lines=(
+    "auth        required      pam_faillock.so preauth"
+    "auth        [default=die] pam_faillock.so authfail"
+    "auth        sufficient    pam_faillock.so authsucc"
+  )
 
-preauth="auth required pam_tally2.so preauth"
-authfail="auth required pam_tally2.so authfail"
-authsucc="auth required pam_tally2.so authsucc"
-account_line="account required pam_tally2.so"
-grep -Fxq "$preauth" "$file_auth" || preauth_added=1
-grep -Fxq "$authfail" "$file_auth" || authfail_added=1
-grep -Fxq "$authsucc" "$file_auth" || authsucc_added=1
-grep -vF "$preauth" "$file_auth" | grep -vF "$authfail" | grep -vF "$authsucc" > "${file_auth}.tmp"
+  echo "Configuring $auth_file..."
+  for line in "${auth_lines[@]}"; do
+    if ! grep -Fxq "$line" "$auth_file"; then
+      case "$line" in
+        *preauth*)
+          sudo sed -i "/pam_unix.so/i $line" "$auth_file"
+          ;;
+        *authfail*)
+          sudo sed -i "/pam_unix.so/a $line" "$auth_file"
+          ;;
+        *authsucc*)
+          if ! grep -Fxq "$line" "$auth_file"; then
+            echo "$li
 
-inserted_preauth=0
-inserted_authfail=0
-inserted_authsucc=0
-
-while IFS= read -r line; do
-if [[ $inserted_preauth -eq 0 && "$line" =~ pam_unix.so ]]; then
-echo "$preauth" >> "${file_auth}.tmp"
-inserted_preauth=1
-[[ $preauth_added ]] && echo "Added preauth line."
-echo "$line" >> "${file_auth}.tmp"
-if [[ $authfail_added ]]; then
-echo "$authfail" >> "${file_auth}.tmp"
-inserted_authfail=1
-echo "Added authfail line."
-fi
-else
-echo "$line" >> "${file_auth}.tmp"
-fi
-done < "$file_auth"
-
-[[ $inserted_preauth -eq 0 ]] && { echo "$preauth" >> "${file_auth}.tmp"; [[ $preauth_added ]] && echo "Added preauth line at EOF."; }
-[[ $inserted_authfail -eq 0 && $authfail_added ]] && { echo "$authfail" >> "${file_auth}.tmp"; echo "Added authfail line at EOF."; }
-
-if [[ $authsucc_added ]]; then
-echo "$authsucc" >> "${file_auth}.tmp"
-echo "Added authsucc line."
-fi
-
-mv "${file_auth}.tmp" "$file_auth"
-
-[[ -z $preauth_added ]] && echo "Preauth line already present."
-[[ -z $authfail_added ]] && echo "Authfail line already present."
-[[ -z $authsucc_added ]] && echo "Authsucc line already present."
-if ! grep -Fxq "$account_line" "$file_account"; then
-echo "$account_line" >> "$file_account"
-echo "Added account line."
-else
-echo "Account line already present."
-fi
 }

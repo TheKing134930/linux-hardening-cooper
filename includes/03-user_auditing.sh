@@ -43,41 +43,43 @@ AI_BLOCK
 
     # ...existing code...
   ua_audit_interactive_remove_unauthorized_users () {
-  mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
-  declare -A shell_ok=()
-  for s in "${valid_shells[@]}"; do
-    shell_ok["$s"]=1
-  done
-
-  while IFS=: read -r username _ _ _ _ _ shell; do
-    [ -z "$username" ] && continue
-    [ -z "$shell" ] && continue
-
-    if [[ -n "${shell_ok[$shell]:-}" ]]; then
-      printf "Is %s an Authorized User? [Y/n] " "$username"
-      if ! read -r reply; then
-        reply=Y
-      fi
-      reply=${reply:-Y}
-
-      if [[ "$reply" == [Nn] ]]; then
-        if sudo userdel -r "$username" >/dev/null 2>&1; then
-          echo "User $username deleted."
-        elif sudo userdel -f -r "$username" >/dev/null 2>&1; then
-          echo "User $username forcefully deleted."
-        elif sudo userdel -f "$username" >/dev/null 2>&1; then
-          echo "User $username forcefully deleted."
-        else
-          echo "Failed to delete user $username."
+    # Build list of valid shells from /etc/shells (exclude comments/blank)
+    mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
+  
+    declare -A shell_ok=()
+    for s in "${valid_shells[@]}"; do
+      shell_ok["$s"]=1
+    done
+  
+    # Enumerate accounts and check their shell against the valid list
+    while IFS=: read -r username _ _ _ _ _ shell; do
+      [ -z "$username" ] && continue
+      if [[ -n "${shell_ok[$shell]:-}" ]]; then
+        printf "Is %s an Authorized User? [Y/n] " "$username"
+        if ! read -r reply; then
+          reply=Y
         fi
-      else
-        echo "User $username is authorized."
+        reply=${reply:-Y}
+  
+        if [[ "$reply" == [Nn] ]]; then
+          if sudo userdel -r "$username" >/dev/null 2>&1; then
+            echo "User $username deleted."
+          elif sudo userdel -f -r "$username" >/dev/null 2>&1; then
+            echo "User $username forcefully deleted."
+          elif sudo userdel -f "$username" >/dev/null 2>&1; then
+            echo "User $username forcefully deleted."
+          else
+            echo "Failed to delete user $username."
+          fi
+        else
+          echo "User $username is authorized."
+        fi
       fi
-    fi
-  done < <(getent passwd)
-}
+    done < <(getent passwd)
+  }
 
-  # ...existing code...
+ua_audit_interactive_remove_unauthorized_users
+
 }
 
 # -------------------------------------------------------------------
@@ -108,23 +110,21 @@ Requirements:
 - Continue on errors so the loop completes.
 AI_BLOCK
 
-ua_audit_interactive_remove_unauthorized_sudoers () {
-  members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
-  IFS=',' read -r -a users <<< "${members:-}"
+#!/bin/bash
+set -euo pipefail
 
-  for user in "${users[@]}"; do
-    user="$(echo "$user" | xargs)"
-    [ -z "$user" ] && continue
+ua_audit_interactive_remove_unauthorized_sudoers() {
+  # Get members of the sudo group
+  sudo_members=$(getent group sudo | awk -F: '{print $4}' | tr ',' ' ')
 
-    printf "Is %s an Authorized Administrator? [Y/n] " "$user"
-    if ! read -r ans; then
-      ans=Y
-    fi
+  # Loop through each sudo member
+  for user in $sudo_members; do
+    read -p "Is $user an Authorized Administrator? [Y/n] " ans
     ans=${ans:-Y}
 
-    if [[ "$ans" == [Nn] ]]; then
+    if [[ $ans =~ ^[Nn] ]]; then
       if sudo deluser "$user" sudo >/dev/null 2>&1; then
-        echo "Removed $user from sudo."
+        echo "Removed $user from sudo group."
       else
         echo "Warning: Failed to remove $user from sudo."
       fi
@@ -133,7 +133,6 @@ ua_audit_interactive_remove_unauthorized_sudoers () {
     fi
   done
 }
-```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\03-user_auditing.sh
 ua_audit_interactive_remove_unauthorized_sudoers () {
   members="$(getent group sudo 2>/dev/null | cut -d: -f4)"
   echo "Current sudo group members: ${members:-<none>}"
@@ -149,7 +148,8 @@ ua_audit_interactive_remove_unauthorized_sudoers () {
     fi
     ans=${ans:-Y}
 
-    if [[ "$ans" == [Nn] ]]; then
+    # treat anything starting with N or n as No (accept "n", "N", "no", "No", etc.)
+    if [[ $ans =~ ^[Nn] ]]; then
       if sudo deluser "$user" sudo >/dev/null 2>&1; then
         echo "Removed $user from sudo."
       else
@@ -160,6 +160,8 @@ ua_audit_interactive_remove_unauthorized_sudoers () {
     fi
   done
 }
+
+ua_audit_interactive_remove_unauthorized_sudoers
 
 # -------------------------------------------------------------------
 # 3) Force temporary passwords for all users
@@ -179,26 +181,23 @@ Requirements:
 - Continue on errors so one failure does not stop the loop.
 - Print a brief status line per user or a final summary.
 AI_BLOCK
->> 
 
-ua_force_temp_passwords () {
-  local PASSWORD="${TEMP_PASSWORD:-1CyberPatriot!}"
-  local success=0
-  local failure=0
-  local user
+PASSWORD="${TEMP_PASSWORD:-1CyberPatriot!}"
+success=0
+failure=0
 
-  while IFS=: read -r user _; do
-    [ -z "$user" ] && continue
-    if printf '%s:%s\n' "$user" "$PASSWORD" | sudo chpasswd --crypt-method SHA512 >/dev/null 2>&1; then
-      echo "User $user: password set."
-      success=$((success + 1))
+while IFS=: read -r user _; do
+    if printf '%s:%s\n' "$user" "$PASSWORD" | chpasswd --crypt-method SHA512 2>/dev/null; then
+        echo "User $user: password set."
+        success=$((success + 1))
     else
-      echo "User $user: failed to set password."
-      failure=$((failure + 1))
+        echo "User $user: failed to set password."
+        failure=$((failure + 1))
     fi
-  done < <(getent passwd 2>/dev/null || true)
+done < <(getent passwd)
 
-  echo "Summary: $success succeeded, $failure failed."
+echo "Summary: $success succeeded, $failure failed."
+
 }
 
 # -------------------------------------------------------------------
@@ -219,17 +218,16 @@ Requirements:
 - Continue on errors so the loop completes.
 AI_BLOCK
 
-ua_remove_non_root_uid0 () {
-  getent passwd | awk -F: '$3 == 0 && $1 != "root" { print $1 }' | while IFS= read -r user; do
-    [ -z "$user" ] && continue
-    if sudo userdel -r "$user" >/dev/null 2>&1; then
-      echo "User $user deleted."
-    elif sudo userdel -f -r "$user" >/dev/null 2>&1; then
-      echo "User $user forcefully deleted."
+getent passwd | awk -F: '$3 == 0 && $1 != "root" { print $1 }' | while read -r user; do
+    if userdel -r "$user" 2>/dev/null; then
+        echo "User $user deleted."
+    elif userdel -f "$user" 2>/dev/null; then
+        echo "User $user forcefully deleted."
     else
-      echo "Failed to delete user $user."
+        echo "Failed to delete user $user."
     fi
-  done
+done
+
 }
 
 # -------------------------------------------------------------------
@@ -247,21 +245,20 @@ Requirements:
 - For each username, run the chage command with: -M 60 -m 10 -W 7.
 - Continue on errors; print minimal status or a final summary.
 AI_BLOCK
-ua_set_password_aging_policy () {
-  local success=0 failure=0 user
 
-  while IFS=: read -r user _; do
-    [ -z "$user" ] && continue
-    if sudo chage -M 60 -m 10 -W 7 "$user" >/dev/null 2>&1; then
-      echo "Set aging for $user."
-      success=$((success + 1))
+success=0
+failure=0
+
+getent passwd | cut -d: -f1 | while read -r user; do
+    if chage -M 60 -m 10 -W 7 "$user" 2>/dev/null; then
+        success=$((success + 1))
     else
-      echo "Failed to set aging for $user."
-      failure=$((failure + 1))
+        failure=$((failure + 1))
     fi
-  done < <(getent passwd 2>/dev/null || true)
+done
 
-  echo "Password aging: $success succeeded, $failure failed."
+echo "Password policy updated: $success succeeded, $failure failed."
+
 }
 
 # -------------------------------------------------------------------
@@ -280,55 +277,36 @@ Requirements:
 - Print "Changed shell for <user> to /bin/bash." for each change.
 - Continue on errors so the loop completes.
 AI_BLOCK
-# ...existing code...
-ua_set_shells_standard_and_root_bash () {
-  while IFS=: read -r username _ uid _ _ _ _; do
-    [ -z "$username" ] && continue
-    case "$uid" in
-      ''|*[!0-9]*) continue ;;
-    esac
-
-    if [ "$uid" -eq 0 ] || [ "$uid" -ge 1000 ]; then
-      if sudo usermod -s /bin/bash "$username" >/dev/null 2>&1; then
-        echo "Changed shell for $username to /bin/bash."
-      else
-        echo "Failed to change shell for $username."
-      fi
-    fi
-  done < /etc/passwd
-}
-# ...existing code...
-```// filepath: c:\Users\jacob\Team Script\linux-hardening-cooper\includes\03-user_auditing.sh
-# ...existing code...
-ua_set_shells_standard_and_root_bash () {
-  while IFS=: read -r username _ uid _ _ _ _; do
-    [ -z "$username" ] && continue
-    case "$uid" in
-      ''|*[!0-9]*) continue ;;
-    esac
-
-    if [ "$uid" -eq 0 ] || [ "$uid" -ge 1000 ]; then
-      if sudo usermod -s /bin/bash "$username" >/dev/null 2>&1; then
-        echo "Changed shell for $username to /bin/bash."
-      else
-        echo "Failed to change shell for $username."
-      fi
-    fi
-  done < /etc/passwd
+while IFS=: read -r user _ uid _ _ _ _; do
+if [ "$uid" -eq 0 ] || [ "$uid" -ge 1000 ]; then
+if usermod -s /bin/bash "$user" 2>/dev/null; then
+echo "Changed shell for $user to /bin/bash."
+else
+echo "Failed to change shell for $user."
+fi
+fi
+done < /etc/passwd
 }
 # ...existing code...
 
 
 # 7) Set shells for system accounts to /usr/sbin/nologin
 # -------------------------------------------------------------------
-
-ua_set_shells_system_accounts_nologin () {
 #!/bin/bash
-# Loop through all users with UID between 1 and 999 and change their shell
+set -euo pipefail
 
-awk -F: '($3 >= 1 && $3 <= 999) {print $1}' /etc/passwd | while read user; do
-        echo "Changing shell for $user to /usr/sbin/nologin"
-    usermod -s /usr/sbin/nologin "$user"
-    done
-
+ua_set_system_account_shells_nologin() {
+  echo "Setting login shell to /usr/sbin/nologin for system accounts..."
+  while IFS=: read -r user _ uid _ _ _ _; do
+    if [[ "$uid" -ge 1 && "$uid" -le 999 ]]; then
+      if sudo usermod -s /usr/sbin/nologin "$user" >/dev/null 2>&1; then
+        echo "Changed shell for $user to /usr/sbin/nologin."
+      else
+        echo "Failed to change shell for $user (continuing)"
+      fi
+    fi
+  done < /etc/passwd
+  echo "System account shell update complete."
 }
+
+ua_set_system_account_shells_nologin
