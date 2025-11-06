@@ -179,5 +179,3 @@ ua_configure_pam_faillock() {
     fi
   done
 }
-
-ua_configure_pam_faillock
