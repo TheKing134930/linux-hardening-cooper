@@ -52,7 +52,7 @@ if [[ -z "$DISTRO" || -z "$CODENAME" ]]; then
 fi
 
 case "$DISTRO" in
-  Ubuntu)
+  (Ubuntu)
     FILE="/etc/apt/sources.list"
     BACKUP="${FILE}.bak"
     if [[ -f "$FILE" ]]; then
@@ -68,7 +68,7 @@ EOF
     echo "Ubuntu sources refreshed for $CODENAME."
     ;;
     
-  "Linux Mint"|"LinuxMint"|"mint")
+  ("Linux Mint"|"Linuxmint"|"mint")
     source /etc/os-release
     UBUNTU_CODENAME=${UBUNTU_CODENAME:-$(grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2)}
     FILE="/etc/apt/sources.list.d/official-package-repositories.list"
