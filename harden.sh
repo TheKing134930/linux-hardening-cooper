@@ -13,8 +13,8 @@ source "${ROOT_DIR}/config.sh"
 # shellcheck source=./includes/*.sh
 # --- includes (comment out any line to isolate issues) ---
 INCLUDES=(
-  "${ROOT_DIR}/includes/01_document_system.sh"
-  "${ROOT_DIR}/includes/02_os_updates.sh"
+  #"${ROOT_DIR}/includes/01_document_system.sh"
+  #"${ROOT_DIR}/includes/02_os_updates.sh"
   #"${ROOT_DIR}/includes/03_user_auditing.sh"
   #"${ROOT_DIR}/includes/04_account_policy.sh"
   #"${ROOT_DIR}/includes/05_local_policy.sh"
