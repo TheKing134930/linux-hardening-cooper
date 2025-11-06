@@ -20,39 +20,28 @@ invoke_user_auditing () {
 # -------------------------------------------------------------------
 
   ua_audit_interactive_remove_unauthorized_users () {
-    # Build list of valid shells from /etc/shells (exclude comments/blank)
-    mapfile -t valid_shells < <(grep -Ev '^\s*#|^\s*$' /etc/shells 2>/dev/null || true)
-  
-    declare -A shell_ok=()
-    for s in "${valid_shells[@]}"; do
-      shell_ok["$s"]=1
-    done
-  
-    # Enumerate accounts and check their shell against the valid list
-    while IFS=: read -r username _ _ _ _ _ shell; do
-      [ -z "$username" ] && continue
-      if [[ -n "${shell_ok[$shell]:-}" ]]; then
-        printf "Is %s an Authorized User? [Y/n] " "$username"
-        if ! read -r reply; then
-          reply=Y
-        fi
-        reply=${reply:-Y}
-  
-        if [[ "$reply" == [Nn] ]]; then
-          if sudo userdel -r "$username" >/dev/null 2>&1; then
-            echo "User $username deleted."
-          elif sudo userdel -f -r "$username" >/dev/null 2>&1; then
-            echo "User $username forcefully deleted."
-          elif sudo userdel -f "$username" >/dev/null 2>&1; then
-            echo "User $username forcefully deleted."
-          else
-            echo "Failed to delete user $username."
-          fi
+# Loop through all users and remove unauthorized users
+BOLD_RED='\033[1;31m'
+BOLD_GREEN='\033[1;32m'
+shells=$(cat /etc/shells | grep -vE '(^#|^$)')
+users=$(getent passwd | awk -F: -v shells="$shells" 'BEGIN { split(shells, shellArray, "\n") } { for (i in shellArray) if ($7 == shellArray[i]) print $1 }')
+
+    for user in $users; do
+    # Prompt for authorization, default to 'Y'
+		echo -e "Is ${BOLD_GREEN}${user}${NC} an Authorized User? [Y/n] "
+		read answer
+        answer=${answer:-Y}  # Default to 'Y' if no input
+
+        if [[ $answer =~ ^[nN]$ ]]; then
+			echo -e "Removing user ${BOLD_RED}${user}${NC} and their home directory..."
+            userdel -rf "$user"
+			echo -e "User ${BOLD_RED}${user}${NC} removed."
+            echo -e "\n"
         else
-          echo "User $username is authorized."
+            echo -e "User ${BOLD_GREEN}${user}${NC} is authorized."
+            echo -e "\n"
         fi
-      fi
-    done < <(getent passwd)
+    done
   }
 
 
