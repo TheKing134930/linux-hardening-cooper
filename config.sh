@@ -1,4 +1,4 @@
-# config.sh � Ubuntu/Debian/Linux Mint only
+# config.sh — Ubuntu/Debian/Linux Mint only
 
 # -------- Distro info (Debian family only) ----------
 if command -v lsb_release >/dev/null 2>&1; then
