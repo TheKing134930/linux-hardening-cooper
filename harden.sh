@@ -11,7 +11,26 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${ROOT_DIR}/config.sh"
 
 # shellcheck source=./includes/*.sh
-for f in "${ROOT_DIR}/includes/"*.sh; do source "$f"; done
+# --- includes (comment out any line to isolate issues) ---
+INCLUDES=(
+  #"${ROOT_DIR}/includes/01_document_system.sh"
+  #"${ROOT_DIR}/includes/02_os_updates.sh"
+  #"${ROOT_DIR}/includes/03_user_auditing.sh"
+  #"${ROOT_DIR}/includes/04_account_policy.sh"
+  #"${ROOT_DIR}/includes/05_local_policy.sh"
+  #"${ROOT_DIR}/includes/06_defensive_countermeasures.sh"
+  #"${ROOT_DIR}/includes/07_uncategorized_os.sh"
+  #"${ROOT_DIR}/includes/08_service_auditing.sh"
+  #"${ROOT_DIR}/includes/09_application_updates.sh"
+  #"${ROOT_DIR}/includes/10_prohibited_files.sh"
+  #"${ROOT_DIR}/includes/11_unwanted_software.sh"
+  #"${ROOT_DIR}/includes/12_malware.sh"
+  #"${ROOT_DIR}/includes/13_application_security.sh"
+)
+
+for f in "${INCLUDES[@]}"; do
+  source "$f"
+done
 
 # --- UI helpers ---
 C_CYAN="$(tput setaf 6 || true)"; C_GREEN="$(tput setaf 2 || true)"
