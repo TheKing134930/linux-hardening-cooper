@@ -68,7 +68,7 @@ EOF
     echo "Ubuntu sources refreshed for $CODENAME."
     ;;
     
-  "Linux Mint"|"LinuxMint"|"mint")
+  ("Linux Mint"|"LinuxMint"|"mint")
     source /etc/os-release
     UBUNTU_CODENAME=${UBUNTU_CODENAME:-$(grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2)}
     FILE="/etc/apt/sources.list.d/official-package-repositories.list"

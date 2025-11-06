@@ -182,22 +182,23 @@ Requirements:
 - Print a brief status line per user or a final summary.
 AI_BLOCK
 
-PASSWORD="${TEMP_PASSWORD:-1CyberPatriot!}"
-success=0
-failure=0
+ua_force_temp_passwords () {
+  local PASSWORD="${TEMP_PASSWORD:-1CyberPatriot!}"
+  local success=0 failure=0 user
 
-while IFS=: read -r user _; do
-    if printf '%s:%s\n' "$user" "$PASSWORD" | chpasswd --crypt-method SHA512 2>/dev/null; then
-        echo "User $user: password set."
-        success=$((success + 1))
+  while IFS=: read -r user _; do
+    [ -z "$user" ] && continue
+    if printf '%s:%s\n' "$user" "$PASSWORD" | sudo chpasswd --crypt-method SHA512 >/dev/null 2>&1; then
+      echo "User $user: password set."
+      success=$((success + 1))
     else
-        echo "User $user: failed to set password."
-        failure=$((failure + 1))
+      echo "User $user: failed to set password."
+      failure=$((failure + 1))
     fi
-done < <(getent passwd)
+  done < <(getent passwd 2>/dev/null || true)
 
-echo "Summary: $success succeeded, $failure failed."
-
+  echo "Summary: $success succeeded, $failure failed."
+}
 }
 
 # -------------------------------------------------------------------
