@@ -148,10 +148,11 @@ AI_BLOCK
 #!/bin/bash
 set -euo pipefail
 
-ua_configure_pam_faillock() 
+ua_configure_pam_faillock() {
   auth_file="/etc/pam.d/common-auth"
   account_file="/etc/pam.d/common-account"
   ts=$(date +%F_%H-%M-%S)
+
   sudo cp "$auth_file" "${auth_file}.${ts}.bak"
   sudo cp "$account_file" "${account_file}.${ts}.bak"
 
@@ -172,7 +173,11 @@ ua_configure_pam_faillock()
           sudo sed -i "/pam_unix.so/a $line" "$auth_file"
           ;;
         *authsucc*)
-          if ! grep -Fxq "$line" "$auth_file"; then
-            echo "$li
-
+          sudo sed -i "\$a $line" "$auth_file"
+          ;;
+      esac
+    fi
+  done
 }
+
+ua_configure_pam_faillock
