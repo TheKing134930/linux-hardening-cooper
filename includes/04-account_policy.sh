@@ -40,7 +40,6 @@ sudo sed -i 's/pam_unix.so.*/pam_unix.so obscure use_authtok try_first_pass yesc
 }
 
 ap_pwquality_install {
-  set -euo pipefail
   pkg="libpam-pwquality"
 
   if dpkg -s "$pkg" >/dev/null 2>&1; then
