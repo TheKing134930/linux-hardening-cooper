@@ -7,6 +7,8 @@ invoke_account_policy () {
   ap_secure_login_defs
   ap_blankpasswords_disallow
   ap_pam_unixso
+  ap_pwquality_install
+  ensure_pwhistory_line
   ap_pwquality_conf_file
   ap_lockout_faillock
 
@@ -34,9 +36,57 @@ sed -i '/pam_unix.so/s/nullok[_secure]*//g' /etc/pam.d/common-auth
 ap_pam_unixso () {
 backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
 file="/etc/pam.d/common-password"
+sudo sed -i 's/pam_unix.so.*/pam_unix.so obscure use_authtok try_first_pass yescrypt/g' $file
+}
 
-sudo sed -i 's/pam_unix.so.*/pam_unix.so obscure use_authtok try_first_pass yescrypt remember=10/g' $file
+ap_pwquality_install {
+  set -euo pipefail
+  pkg="libpam-pwquality"
 
+  if dpkg -s "$pkg" >/dev/null 2>&1; then
+    echo "$pkg is already installed."
+    return 0
+  fi
+
+  echo "Installing $pkg ..."
+  if [[ $EUID -ne 0 ]]; then
+    sudo apt-get update -y
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg"
+  else
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg"
+  fi
+}
+
+ensure_pwhistory_line() {
+  set -euo pipefail
+  local file="/etc/pam.d/common-password"
+  local backup="${file}.$(date +%F_%H-%M-%S).bak"
+  local remember="${1:-10}"
+  local extra_opts="${2:-}"   # e.g., "enforce_for_root"
+
+  local line="password    required                        pam_pwhistory.so remember=${remember}${extra_opts:+ ${extra_opts}}"
+
+  echo "Backing up $file -> $backup"
+  sudo cp -a "$file" "$backup"
+
+  # Already present?
+  if grep -Eq '^[[:space:]]*password[[:space:]]+.*pam_pwhistory\.so\b' "$file"; then
+    echo "pam_pwhistory line already present; no change."
+    return 0
+  fi
+
+  # Insert before the first pam_unix.so password line; else append
+  if grep -Eq '^[[:space:]]*password[[:space:]].*pam_unix\.so\b' "$file"; then
+    sudo sed -i --follow-symlinks \
+'0,/^[[:space:]]*password[[:space:]].*pam_unix\.so\b/{
+/^[[:space:]]*password[[:space:]].*pam_unix\.so\b/i '"$line"'
+}' "$file"
+    echo "Inserted pam_pwhistory before pam_unix.so."
+  else
+    echo "$line" | sudo tee -a "$file" >/dev/null
+    echo "pam_unix.so not found; appended pam_pwhistory at end."
+  fi
 }
 
 # -------------------------------------------------------------------
