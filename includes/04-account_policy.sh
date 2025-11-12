@@ -148,38 +148,30 @@ fi
 ## faillock.conf
 fail_file="/etc/security/faillock.conf"
 backup="${fail_file}.$(date +%F_%H-%M-%S).bak"
-
-echo "Backing up $fail_file to $backup"
 sudo cp -a "$fail_file" "$backup"
 
-# Key-value settings
-declare -A kv_settings=(
-  [deny]=5
-  [fail_interval]=900
-  [unlock_time]=600
-)
-
-# Flags with no values
+declare -A kv_settings=([deny]=5 [fail_interval]=900 [unlock_time]=600)
 flags=(audit silent)
 
-# --- key-value settings ---
+# key=value
 for key in "${!kv_settings[@]}"; do
-  value="${kv_settings[$key]}"
+  val="${kv_settings[$key]}"
   if grep -Eq "^[[:space:]#]*${key}[[:space:]]*=" "$fail_file"; then
-    sudo sed -i -E "s|^[[:space:]#]*(${key})[[:space:]]*=.*|\1 = ${value}|" "$fail_file"
+    sudo sed -i -E "s|^[[:space:]#]*(${key})[[:space:]]*=.*|\1 = ${val}|" "$fail_file"
   else
-    echo "${key} = ${value}" | sudo tee -a "$fail_file" >/dev/null
+    echo "${key} = ${val}" | sudo tee -a "$fail_file" >/dev/null
   fi
 done
 
-# --- flags (no values) ---
+# flags (no value) — note: no alternation; use [[:space:]]*$ instead
 for flag in "${flags[@]}"; do
   if grep -Eq "^[[:space:]#]*${flag}([[:space:]]|$)" "$fail_file"; then
-    sudo sed -i -E "s|^[[:space:]#]*(${flag})([[:space:]]|$)|\1|" "$fail_file"
+    sudo sed -i -E "s|^[[:space:]#]*(${flag})[[:space:]]*$|\1|" "$fail_file"
   else
     echo "$flag" | sudo tee -a "$fail_file" >/dev/null
   fi
 done
+
 
 echo "faillock.conf successfully configured."
 
