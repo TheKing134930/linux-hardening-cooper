@@ -6,9 +6,9 @@ invoke_account_policy () {
 
   ap_secure_login_defs
   ap_blankpasswords_disallow
-  ap_pam_pwquality_inline
+  ap_pam_unixso
   ap_pwquality_conf_file
-  #ap_lockout_faillock
+  ap_lockout_faillock
 
   echo -e "${CYAN}[Account Policy] Done${NC}"
 }
@@ -29,64 +29,35 @@ sed -i '/pam_unix.so/s/nullok[_secure]*//g' /etc/pam.d/common-auth
 }
 
 # -------------------------------------------------------------------
-# Insert pam_pwquality inline in common-password
+# Strong password encryption and password history
 # -------------------------------------------------------------------
-ap_pam_pwquality_inline () {
+ap_pam_unixso () {
 backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
 file="/etc/pam.d/common-password"
-line="password requisite pam_pwquality.so retry=3"
 
-cp "$file" "$backup"
+sudo sed -i 's/pam_unix.so.*/pam_unix.so obscure use_authtok try_first_pass yescrypt remember=10/g' $file
 
-if ! grep -Fxq "$line" "$file"; then
-awk -v insert="$line" '
-{if(!inserted && $0 ~ /pam_unix.so/) {print insert; inserted=1} print}
-' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
-fi
-
-grep -Fxq "$line" "$file" && echo "pwquality line is in place."
 }
 
 # -------------------------------------------------------------------
 # Configure /etc/security/pwquality.conf
 # -------------------------------------------------------------------
 ap_pwquality_conf_file () {
-  : <<'AI_BLOCK'
-EXPLANATION
-Configure /etc/security/pwquality.conf with these exact settings:
-  minlen = 10
-  minclass = 2
-  maxrepeat = 2
-  maxclassrepeat = 6
-  lcredit = -1
-  ucredit = -1
-  dcredit = -1
-  ocredit = -1
-  maxsequence = 2
-  difok = 5
-  gecoscheck = 1
+  set -euo pipefail
 
-AI_PROMPT
-Return only Bash code (no markdown, no prose).
-Requirements:
-- Target file: /etc/security/pwquality.conf.
-- Create a timestamped backup before editing.
-- For each key above:
-  - If present (commented or uncommented), set it to the exact value.
-  - If missing, append "key = value" on its own line.
-- Keep changes idempotent.
-- Print a short confirmation after applying settings.
-AI_BLOCK
-#!/bin/bash
-set -euo pipefail
-
-ua_configure_pwquality() {
   file="/etc/security/pwquality.conf"
   backup="${file}.$(date +%F_%H-%M-%S).bak"
 
   echo "Creating backup of $file at $backup"
-  sudo cp "$file" "$backup"
+  if [[ -f "$file" ]]; then
+    sudo cp -a "$file" "$backup"
+  else
+    # create an empty file with sensible perms if it doesn't exist
+    echo "# created by ap_pwquality_conf_file" | sudo tee "$file" >/dev/null
+    sudo chmod 0644 "$file"
+  fi
 
+  # Desired settings (values can be changed here)
   declare -A settings=(
     [minlen]=10
     [minclass]=2
@@ -101,81 +72,115 @@ ua_configure_pwquality() {
     [gecoscheck]=1
   )
 
-  for key in "${!settings[@]}"; do
+  # Deterministic key order (associative arrays iterate unpredictably)
+  keys=(minlen minclass maxrepeat maxclassrepeat lcredit ucredit dcredit ocredit maxsequence difok gecoscheck)
+
+  for key in "${keys[@]}"; do
     value="${settings[$key]}"
-    if grep -Eq "^[#\s]*${key}\s*=" "$file"; then
-      sudo sed -i "s|^[#\s]*${key}\s*=.*|${key} = ${value}|" "$file"
+    # If a line exists (commented or not), replace it; else append
+    if grep -Eq "^[[:space:]#]*${key}[[:space:]]*=" "$file"; then
+      sudo sed -i -E "s|^[[:space:]#]*(${key})[[:space:]]*=.*|\1 = ${value}|g" "$file"
     else
       echo "${key} = ${value}" | sudo tee -a "$file" >/dev/null
     fi
   done
 
+  # Ensure newline at EOF (some tools are picky)
+  sudo sed -i -e '$a\' "$file"
+
   echo "pwquality.conf successfully configured."
 }
 
-ua_configure_pwquality
-
-}
 
 # -------------------------------------------------------------------
 # Configure pam_faillock in common-auth/common-account
 # -------------------------------------------------------------------
 ap_lockout_faillock () {
-  : <<'AI_BLOCK'
-EXPLANATION
-Configure account lockout using pam_faillock on Debian/Ubuntu/Mint.
+pam_file="/etc/pam.d/common-auth"
 
-Required lines (exact spacing not critical, order matters):
-  In /etc/pam.d/common-auth (around pam_unix.so):
-    auth        required      pam_faillock.so preauth
-    auth        [default=die] pam_faillock.so authfail
-    auth        sufficient    pam_faillock.so authsucc
-  In /etc/pam.d/common-account:
-    account     required      pam_faillock.so
+## preauth 
+# If "pam_faillock.so ... preauth" isn't already present:
+if ! grep -Eq '^[[:space:]]*auth[[:space:]]+required[[:space:]]+pam_faillock\.so([[:space:]]+.*)?\bpreauth\b' "$pam_file"; then
+  if grep -Eq '^[[:space:]]*auth[[:space:]].*pam_unix\.so' "$pam_file"; then
+    # Insert once before the first pam_unix.so auth line
+    sudo sed -i --follow-symlinks \
+      '0,/^[[:space:]]*auth[[:space:]].*pam_unix\.so/{/^[[:space:]]*auth[[:space:]].*pam_unix\.so/i auth    required                        pam_faillock.so preauth
+}' "$pam_file"
+  else
+    # Fallback: no pam_unix.so line found; append
+    echo "auth    required                        pam_faillock.so preauth" | sudo tee -a "$pam_file" >/dev/null
+  fi
+fi
 
-AI_PROMPT
-Return only Bash code (no markdown, no prose).
-Requirements:
-- Create timestamped backups of both files before editing.
-- In /etc/pam.d/common-auth:
-  - Ensure the three auth lines exist exactly once each.
-  - Place the preauth line before pam_unix.so; ensure authfail follows appropriately; ensure authsucc is present.
-- In /etc/pam.d/common-account:
-  - Ensure the account line exists exactly once.
-- Keep the edit idempotent (no duplicates on subsequent runs).
-- Print simple confirmations indicating which lines were added or already present.
-AI_BLOCK
-#!/bin/bash
-set -euo pipefail
+## authfail
+# Skip if an authfail line is already there (comment- and whitespace-tolerant)
+if ! grep -Eq '^[[:space:]]*auth[[:space:]]+\[default=die\][[:space:]]+pam_faillock\.so([[:space:]]+.*)?\bauthfail\b' "$pam_file"; then
+  if grep -Eq '^[[:space:]]*auth[[:space:]].*pam_unix\.so' "$pam_file"; then
+    # Insert once, right after the FIRST pam_unix.so auth line (not commented)
+    sudo sed -i --follow-symlinks \
+'0,/^[[:space:]]*auth[[:space:]].*pam_unix\.so/{
+/^[[:space:]]*auth[[:space:]].*pam_unix\.so/a auth    [default=die]                        pam_faillock.so authfail
+}' "$pam_file"
+  else
+    # Fallback if no pam_unix.so auth line exists
+    echo "auth    [default=die]                        pam_faillock.so authfail" | sudo tee -a "$pam_file" >/dev/null
+  fi
+fi
 
-ua_configure_pam_faillock() {
-  auth_file="/etc/pam.d/common-auth"
-  account_file="/etc/pam.d/common-account"
-  ts=$(date +%F_%H-%M-%S)
+## authsucc
+# If 'auth sufficient pam_faillock.so authsucc' not present, insert it
+if ! grep -Eq '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_faillock\.so([[:space:]]+.*)?\bauthsucc\b' "$pam_file"; then
+  if grep -Eq '^[[:space:]]*auth[[:space:]].*pam_faillock\.so([[:space:]]+.*)?\bauthfail\b' "$pam_file"; then
+    sudo sed -i --follow-symlinks \
+'0,/^[[:space:]]*auth[[:space:]].*pam_faillock\.so.*authfail/{
+/^[[:space:]]*auth[[:space:]].*pam_faillock\.so.*authfail/a auth    sufficient                        pam_faillock.so authsucc
+}' "$pam_file"
+  elif grep -Eq '^[[:space:]]*auth[[:space:]].*pam_unix\.so' "$pam_file"; then
+    sudo sed -i --follow-symlinks \
+'0,/^[[:space:]]*auth[[:space:]].*pam_unix\.so/{
+/^[[:space:]]*auth[[:space:]].*pam_unix\.so/a auth    sufficient                        pam_faillock.so authsucc
+}' "$pam_file"
+  else
+    echo "auth    sufficient                        pam_faillock.so authsucc" | sudo tee -a "$pam_file" >/dev/null
+  fi
+fi
 
-  sudo cp "$auth_file" "${auth_file}.${ts}.bak"
-  sudo cp "$account_file" "${account_file}.${ts}.bak"
+## faillock.conf
+fail_file="/etc/security/faillock.conf"
+backup="${fail_file}.$(date +%F_%H-%M-%S).bak"
 
-  declare -a auth_lines=(
-    "auth        required      pam_faillock.so preauth"
-    "auth        [default=die] pam_faillock.so authfail"
-    "auth        sufficient    pam_faillock.so authsucc"
-  )
+echo "Backing up $fail_file to $backup"
+sudo cp -a "$fail_file" "$backup"
 
-  echo "Configuring $auth_file..."
-  for line in "${auth_lines[@]}"; do
-    if ! grep -Fxq "$line" "$auth_file"; then
-      case "$line" in
-        *preauth*)
-          sudo sed -i "/pam_unix.so/i $line" "$auth_file"
-          ;;
-        *authfail*)
-          sudo sed -i "/pam_unix.so/a $line" "$auth_file"
-          ;;
-        *authsucc*)
-          sudo sed -i "\$a $line" "$auth_file"
-          ;;
-      esac
-    fi
-  done
+# Key-value settings
+declare -A kv_settings=(
+  [deny]=5
+  [fail_interval]=900
+  [unlock_time]=600
+)
+
+# Flags with no values
+flags=(audit silent)
+
+# --- key-value settings ---
+for key in "${!kv_settings[@]}"; do
+  value="${kv_settings[$key]}"
+  if grep -Eq "^[[:space:]#]*${key}[[:space:]]*=" "$fail_file"; then
+    sudo sed -i -E "s|^[[:space:]#]*(${key})[[:space:]]*=.*|\1 = ${value}|" "$fail_file"
+  else
+    echo "${key} = ${value}" | sudo tee -a "$fail_file" >/dev/null
+  fi
+done
+
+# --- flags (no values) ---
+for flag in "${flags[@]}"; do
+  if grep -Eq "^[[:space:]#]*${flag}([[:space:]]|$)" "$fail_file"; then
+    sudo sed -i -E "s|^[[:space:]#]*(${flag})([[:space:]]|$)|\1|" "$fail_file"
+  else
+    echo "$flag" | sudo tee -a "$fail_file" >/dev/null
+  fi
+done
+
+echo "faillock.conf successfully configured."
+
 }
