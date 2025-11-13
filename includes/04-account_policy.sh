@@ -33,13 +33,18 @@ sed -i '/pam_unix.so/s/nullok[_secure]*//g' /etc/pam.d/common-auth
 # -------------------------------------------------------------------
 # Strong password encryption and password history
 # -------------------------------------------------------------------
-ap_pam_unixso () {
-backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
-file="/etc/pam.d/common-password"
-sudo sed -i 's/pam_unix.so.*/pam_unix.so obscure use_authtok try_first_pass yescrypt/g' $file
+ap_pam_unixso() {
+  backup="/etc/pam.d/common-password.$(date +%Y%m%d%H%M%S).bak"
+  file="/etc/pam.d/common-password"
+  
+  # Backup file before editing
+  sudo cp "$file" "$backup"
+
+  # Fix the sed command syntax (missing escape and anchored match)
+  sudo sed -i 's|pam_unix\.so.*|pam_unix.so obscure use_authtok try_first_pass yescrypt|' "$file"
 }
 
-ap_pwquality_install {
+ap_pwquality_install() {
   pkg="libpam-pwquality"
 
   if dpkg -s "$pkg" >/dev/null 2>&1; then
@@ -56,6 +61,7 @@ ap_pwquality_install {
     DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg"
   fi
 }
+
 
 ensure_pwhistory_line() {
   set -euo pipefail
